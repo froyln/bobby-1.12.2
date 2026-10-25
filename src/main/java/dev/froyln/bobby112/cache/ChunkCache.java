@@ -94,7 +94,9 @@ public final class ChunkCache {
     }
 
     public static void flushPendingSaves() {
-        ChunkStorage.flush();
+        if (!ChunkStorage.flush()) {
+            System.err.println("[Bobby 1.12.2] Some terrain snapshots could not be saved after retries.");
+        }
     }
 
     public static synchronized void begin(World world) {

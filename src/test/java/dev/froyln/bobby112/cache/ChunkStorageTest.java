@@ -41,8 +41,9 @@ public class ChunkStorageTest {
         AtomicInteger written = new AtomicInteger();
         ChunkStorage.enqueueSave("fixture-failure", null, () -> { throw new IllegalStateException("expected fixture failure"); });
         ChunkStorage.enqueueSave("fixture-after-failure", null, written::incrementAndGet);
-        ChunkStorage.flush();
+        assertFalse(ChunkStorage.flush());
         assertEquals(1, written.get());
+        assertTrue(ChunkStorage.flush());
     }
 
     @Test

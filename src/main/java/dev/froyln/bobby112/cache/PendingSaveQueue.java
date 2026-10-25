@@ -48,7 +48,23 @@ final class PendingSaveQueue<T> {
         iterator.remove();
         return () -> {
             try {
-                entry.task.run();
+                for (int attempt = 1; ; attempt++) {
+                    try {
+                        entry.task.run();
+                        break;
+                    } catch (RuntimeException failure) {
+                        if (attempt == 3) throw failure;
+                        synchronized (PendingSaveQueue.this) {
+                            if (latest.get(key) != entry) return;
+                        }
+                        try {
+                            Thread.sleep(100L * attempt);
+                        } catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            throw failure;
+                        }
+                    }
+                }
             } finally {
                 synchronized (PendingSaveQueue.this) {
                     latest.remove(key, entry);

@@ -6,7 +6,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.datafix.DataFixesManager;
 import net.minecraft.world.MinecraftException;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,22 +35,16 @@ final class ChunkStorage {
     });
     private static volatile boolean warnedSaveBacklog;
     private static boolean saveDrainScheduled;
+    private static boolean saveFailed;
 
-    private final AnvilChunkLoader loader;
+    private final CachedChunkLoader loader;
     private final CacheRetention retention;
     private final File directory;
 
     ChunkStorage(File directory, CacheRetention retention) {
         this.directory = directory;
         this.retention = retention;
-        this.loader = new CachedChunkLoader(directory, DataFixesManager.createFixer()) {
-            @Override
-            public boolean writeNextIO() {
-                synchronized (REGION_IO_LOCK) {
-                    return super.writeNextIO();
-                }
-            }
-        };
+        this.loader = new CachedChunkLoader(directory, DataFixesManager.createFixer());
     }
 
     void save(WorldClient world, Chunk chunk) {
@@ -64,12 +57,9 @@ final class ChunkStorage {
                         "r." + (chunk.x >> 5) + "." + (chunk.z >> 5) + ".mca");
                 long before = region.length();
                 try {
-                    loader.saveChunk(world, chunk);
-                    while (loader.writeNextIO()) {
-                        // Drain the region writer on this single I/O thread.
-                    }
-                } catch (IOException | MinecraftException | RuntimeException e) {
-                    e.printStackTrace();
+                    loader.saveSnapshot(world, chunk);
+                } catch (IOException | MinecraftException e) {
+                    throw new IllegalStateException("Terrain snapshot write failed", e);
                 } finally {
                     retention.recordSizeChange(region.length() - before);
                 }
@@ -91,14 +81,18 @@ final class ChunkStorage {
         }
     }
 
-    static void flush() {
+    static boolean flush() {
         Future<?> drained = SAVE_IO.submit(ChunkStorage::drainSaves);
         boolean interrupted = false;
         try {
             while (true) {
                 try {
                     drained.get();
-                    return;
+                    synchronized (SAVE_LOCK) {
+                        boolean success = !saveFailed;
+                        saveFailed = false;
+                        return success;
+                    }
                 } catch (InterruptedException e) {
                     interrupted = true;
                 }
@@ -119,6 +113,9 @@ final class ChunkStorage {
                 try {
                     task.run();
                 } catch (RuntimeException e) {
+                    synchronized (SAVE_LOCK) {
+                        saveFailed = true;
+                    }
                     e.printStackTrace();
                 }
                 continue;
