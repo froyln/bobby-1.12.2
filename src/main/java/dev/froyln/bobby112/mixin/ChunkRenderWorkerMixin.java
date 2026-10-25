@@ -3,19 +3,22 @@ package dev.froyln.bobby112.mixin;
 import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.chunk.ChunkRenderWorker;
+import net.minecraft.client.renderer.chunk.ChunkCompileTaskGenerator;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ChunkRenderWorker.class)
 public abstract class ChunkRenderWorkerMixin {
-    @Redirect(method = "isChunkExisting", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getChunk(II)Lnet/minecraft/world/chunk/Chunk;"))
-    private Chunk bobby112$renderNeighbor(World world, int x, int z) {
+    @Redirect(method = "processTask", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/chunk/ChunkRenderWorker;isChunkExisting(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/world/World;)Z"))
+    private boolean bobby112$allowCachedBoundary(ChunkRenderWorker worker, BlockPos neighbor, World world, ChunkCompileTaskGenerator task) {
         if (world instanceof WorldClient) {
-            return RenderChunkLookup.getCachedOrLive(world, x, z, ((WorldClient) world).getChunkProvider());
+            BlockPos center = task.getRenderChunk().getPosition();
+            return RenderChunkLookup.hasRenderNeighbor(world, ((WorldClient) world).getChunkProvider(),
+                    center.getX() >> 4, center.getZ() >> 4, neighbor.getX() >> 4, neighbor.getZ() >> 4);
         }
-        return world.getChunk(x, z);
+        return !world.getChunk(neighbor.getX() >> 4, neighbor.getZ() >> 4).isEmpty();
     }
 }
