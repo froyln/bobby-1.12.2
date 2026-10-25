@@ -27,7 +27,7 @@ final class CacheRetention {
         this.maxBytes = maxBytes;
         File parent = root.getParentFile();
         this.valid = !Files.isSymbolicLink(parent.toPath()) && !Files.isSymbolicLink(root.toPath());
-        this.bytes = valid ? prune(root, maxBytes) : maxBytes;
+        this.bytes = valid ? prune(root, Math.max(0L, maxBytes - WRITE_HEADROOM - 1L)) : maxBytes;
         if (!valid) {
             System.err.println("[Bobby 1.12.2] Cache root is a symbolic link; persistent cache is disabled.");
         }

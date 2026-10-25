@@ -40,6 +40,27 @@ public class CacheRetentionTest {
     }
 
     @Test
+    public void resumesSavingInsideHeadroomAndAtExactBudget() throws Exception {
+        for (int oldMiB : new int[]{1, 2, 3}) {
+            File root = temporaryFolder.newFolder("cache-" + oldMiB);
+            File regions = new File(root, "profile/0/region");
+            assertTrue(regions.mkdirs());
+            File oldRegion = new File(regions, "r.0.0.mca");
+            File newRegion = new File(regions, "r.1.0.mca");
+            Files.write(oldRegion.toPath(), new byte[oldMiB * 1024 * 1024]);
+            Files.write(newRegion.toPath(), new byte[5 * 1024 * 1024]);
+            Files.setLastModifiedTime(oldRegion.toPath(), FileTime.fromMillis(1000L));
+            Files.setLastModifiedTime(newRegion.toPath(), FileTime.fromMillis(2000L));
+
+            CacheRetention retention = new CacheRetention(root, 8L * 1024 * 1024);
+
+            assertFalse(oldRegion.exists());
+            assertTrue(newRegion.exists());
+            assertTrue(retention.canSave());
+        }
+    }
+
+    @Test
     public void refusesToPruneThroughCacheRootSymlink() throws Exception {
         File outside = temporaryFolder.newFolder("outside");
         File regionDirectory = new File(outside, "region");
