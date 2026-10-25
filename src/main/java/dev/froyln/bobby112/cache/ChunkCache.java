@@ -100,13 +100,7 @@ public final class ChunkCache {
             }
         }
         long pos = ChunkPos.asLong(source.x, source.z);
-        Chunk copy = new Chunk(world, source.x, source.z);
-        copy.setStorageArrays(copyStorageArrays(source.getBlockStorageArray()));
-        copy.setBiomeArray(source.getBiomeArray().clone());
-        copy.setHeightMap(source.getHeightMap().clone());
-        copy.setTerrainPopulated(source.isTerrainPopulated());
-        copy.setLightPopulated(source.isLightPopulated());
-        copy.markLoaded(false);
+        Chunk copy = copySnapshot(world, source);
         ChunkStorage currentStorage;
         synchronized (ChunkCache.class) {
             pendingLoads.remove(pos);
@@ -119,6 +113,17 @@ public final class ChunkCache {
         if (currentStorage != null) {
             currentStorage.save(world, copy);
         }
+    }
+
+    static Chunk copySnapshot(World world, Chunk source) {
+        Chunk copy = new Chunk(world, source.x, source.z);
+        copy.setStorageArrays(copyStorageArrays(source.getBlockStorageArray()));
+        copy.setBiomeArray(source.getBiomeArray().clone());
+        copy.setHeightMap(source.getHeightMap().clone());
+        copy.setTerrainPopulated(source.isTerrainPopulated());
+        copy.setLightPopulated(source.isLightPopulated());
+        copy.markLoaded(false);
+        return copy;
     }
 
     static ExtendedBlockStorage[] copyStorageArrays(ExtendedBlockStorage[] sections) {

@@ -25,7 +25,7 @@ final class ChunkStorage {
                 thread.setDaemon(true);
                 return thread;
             });
-    private static final PendingSaveQueue PENDING_SAVES = new PendingSaveQueue(1024);
+    private static final PendingSaveQueue<Chunk> PENDING_SAVES = new PendingSaveQueue<>(1024);
     private static final Object SAVE_LOCK = new Object();
     private static final ExecutorService SAVE_IO = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "Bobby 1.12.2 cache writer");
@@ -73,8 +73,11 @@ final class ChunkStorage {
                 }
             }
         };
-        String key = directory.getAbsolutePath() + '|' + chunk.x + '|' + chunk.z;
-        if (PENDING_SAVES.offer(key, task) && !warnedSaveBacklog) {
+        enqueueSave(saveKey(chunk.x, chunk.z), chunk, task);
+    }
+
+    static void enqueueSave(String key, Chunk chunk, Runnable task) {
+        if (PENDING_SAVES.offer(key, chunk, task) && !warnedSaveBacklog) {
             warnedSaveBacklog = true;
             System.err.println("[Bobby 1.12.2] Cache save backlog is full; the oldest pending chunk save was dropped.");
         }
@@ -111,7 +114,7 @@ final class ChunkStorage {
             IO.execute(() -> {
                 boolean generated;
                 synchronized (REGION_IO_LOCK) {
-                    generated = loader.isChunkGeneratedAt(x, z);
+                    generated = PENDING_SAVES.latest(saveKey(x, z)) != null || loader.isChunkGeneratedAt(x, z);
                 }
                 if (generated) {
                     loadNow(world, x, z, token);
@@ -139,7 +142,7 @@ final class ChunkStorage {
                             if (token != null) {
                                 boolean generated;
                                 synchronized (REGION_IO_LOCK) {
-                                    generated = loader.isChunkGeneratedAt(x, z);
+                                    generated = PENDING_SAVES.latest(saveKey(x, z)) != null || loader.isChunkGeneratedAt(x, z);
                                 }
                                 if (generated) {
                                     loadNow(world, x, z, token);
@@ -157,11 +160,16 @@ final class ChunkStorage {
         }
     }
 
+    private String saveKey(int x, int z) {
+        return directory.getAbsolutePath() + '|' + x + '|' + z;
+    }
+
     private void loadNow(WorldClient world, int x, int z, Object token) {
         try {
             Chunk chunk;
             synchronized (REGION_IO_LOCK) {
-                chunk = loader.loadChunk(world, x, z);
+                Chunk pending = PENDING_SAVES.latest(saveKey(x, z));
+                chunk = pending == null ? loader.loadChunk(world, x, z) : ChunkCache.copySnapshot(world, pending);
             }
             if (chunk != null) {
                 ChunkCache.loaded(world, x, z, chunk, token);
