@@ -120,7 +120,7 @@ final class ChunkStorage {
                 }
             });
         } catch (RejectedExecutionException full) {
-            ChunkCache.loadFailed(world, x, z, token);
+            ChunkCache.loadDeferred(world, x, z, token);
         }
     }
 

@@ -26,6 +26,7 @@ import java.util.Map;
 public final class ChunkCache {
     private static final int MAX_CACHE_DISTANCE = 34;
     private static final int MAX_FAILED_LOADS = 256;
+    private static final long FAILED_LOAD_RETRY_NANOS = java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
     private static final long MAX_DISK_BYTES = 2L * 1024 * 1024 * 1024;
     private static final Long2ObjectLinkedOpenHashMap<Chunk> CHUNKS = new Long2ObjectLinkedOpenHashMap<>();
     private static World currentWorld;
@@ -33,7 +34,7 @@ public final class ChunkCache {
     private static CacheRetention retention;
     private static volatile boolean enabled = true;
     private static final Map<Long, Object> pendingLoads = new HashMap<>();
-    private static final Long2ObjectLinkedOpenHashMap<Boolean> failedLoads = new Long2ObjectLinkedOpenHashMap<>();
+    private static final Long2ObjectLinkedOpenHashMap<Long> failedLoads = new Long2ObjectLinkedOpenHashMap<>();
     private static int scanGeneration;
     private static int lastScanX = Integer.MIN_VALUE;
     private static int lastScanZ = Integer.MIN_VALUE;
@@ -159,7 +160,7 @@ public final class ChunkCache {
             if (chunk != null) {
                 return chunk.isAtLocation(x, z) ? chunk : null;
             }
-            if (!(world instanceof WorldClient) || currentStorage == null || failedLoads.containsKey(pos) || pendingLoads.containsKey(pos)) {
+            if (!(world instanceof WorldClient) || currentStorage == null || !retryAllowed(failedLoads, pos, System.nanoTime()) || pendingLoads.containsKey(pos)) {
                 return null;
             }
             token = new Object();
@@ -171,7 +172,7 @@ public final class ChunkCache {
 
     static synchronized Object beginLoad(WorldClient world, int x, int z) {
         long pos = ChunkPos.asLong(x, z);
-        if (!enabled || currentWorld != world || !withinView(pos) || CHUNKS.containsKey(pos) || failedLoads.containsKey(pos) || pendingLoads.containsKey(pos)) {
+        if (!enabled || currentWorld != world || !withinView(pos) || CHUNKS.containsKey(pos) || !retryAllowed(failedLoads, pos, System.nanoTime()) || pendingLoads.containsKey(pos)) {
             return null;
         }
         Object token = new Object();
@@ -204,15 +205,34 @@ public final class ChunkCache {
         if (currentWorld == world && pendingLoads.get(pos) == token) {
             pendingLoads.remove(pos);
             if (!CHUNKS.containsKey(pos)) {
-                rememberFailedLoad(failedLoads, pos);
+                rememberFailedLoad(failedLoads, pos, System.nanoTime());
             }
         }
     }
 
-    static void rememberFailedLoad(Long2ObjectLinkedOpenHashMap<Boolean> failures, long pos) {
-        failures.putAndMoveToFirst(pos, Boolean.TRUE);
+    static void rememberFailedLoad(Long2ObjectLinkedOpenHashMap<Long> failures, long pos, long now) {
+        failures.putAndMoveToFirst(pos, now);
         if (failures.size() > MAX_FAILED_LOADS) {
             failures.removeLast();
+        }
+    }
+
+    static boolean retryAllowed(Long2ObjectLinkedOpenHashMap<Long> failures, long pos, long now) {
+        Long failedAt = failures.get(pos);
+        if (failedAt == null) {
+            return true;
+        }
+        if (now - failedAt < FAILED_LOAD_RETRY_NANOS) {
+            return false;
+        }
+        failures.remove(pos);
+        return true;
+    }
+
+    static synchronized void loadDeferred(WorldClient world, int x, int z, Object token) {
+        long pos = ChunkPos.asLong(x, z);
+        if (currentWorld == world && pendingLoads.get(pos) == token) {
+            pendingLoads.remove(pos);
         }
     }
 

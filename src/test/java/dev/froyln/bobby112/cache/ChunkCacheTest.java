@@ -39,13 +39,41 @@ public class ChunkCacheTest {
 
     @Test
     public void boundsFailedLoadHistory() {
-        Long2ObjectLinkedOpenHashMap<Boolean> failures = new Long2ObjectLinkedOpenHashMap<>();
+        Long2ObjectLinkedOpenHashMap<Long> failures = new Long2ObjectLinkedOpenHashMap<>();
         for (int pos = 0; pos <= 256; pos++) {
-            ChunkCache.rememberFailedLoad(failures, pos);
+            ChunkCache.rememberFailedLoad(failures, pos, 100L);
         }
         assertEquals(256, failures.size());
         assertFalse(failures.containsKey(0L));
         assertTrue(failures.containsKey(256L));
+    }
+
+    @Test
+    public void retriesFailuresAfterBackoff() {
+        Long2ObjectLinkedOpenHashMap<Long> failures = new Long2ObjectLinkedOpenHashMap<>();
+        ChunkCache.rememberFailedLoad(failures, 5L, 100L);
+        assertFalse(ChunkCache.retryAllowed(failures, 5L, 101L));
+        assertTrue(ChunkCache.retryAllowed(failures, 5L, 2000000100L));
+        assertFalse(failures.containsKey(5L));
+    }
+
+    @Test
+    public void queueRejectionReleasesAdmissionWithoutPoisoningTheChunk() {
+        ChunkCache.setEnabled(false);
+        ChunkCache.setEnabled(true);
+        ChunkCache.begin(null);
+        ChunkCache.updateWindow(0, 0, 2, new LongOpenHashSet());
+        Object first = ChunkCache.beginLoad(null, 1, 1);
+        assertTrue(first != null);
+        assertTrue(ChunkCache.beginLoad(null, 1, 1) == null);
+        ChunkCache.loadDeferred(null, 1, 1, first);
+        Object retry = ChunkCache.beginLoad(null, 1, 1);
+        assertTrue(retry != null);
+        ChunkCache.loadDeferred(null, 1, 1, first);
+        assertTrue(ChunkCache.beginLoad(null, 1, 1) == null);
+        ChunkCache.loadDeferred(null, 1, 1, retry);
+        ChunkCache.setEnabled(false);
+        ChunkCache.setEnabled(true);
     }
 
     @Test
