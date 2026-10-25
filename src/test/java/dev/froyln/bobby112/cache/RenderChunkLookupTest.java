@@ -37,4 +37,22 @@ public class RenderChunkLookupTest {
         provider.loadChunk(1, 0);
         assertTrue(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));
     }
+    @Test
+    public void renderCameraWinsOverStationaryPlayerAndFallsBackSafely() {
+        net.minecraft.entity.Entity player = new CameraEntity();
+        net.minecraft.entity.Entity camera = new CameraEntity();
+        camera.posX = 320;
+        assertSame(camera, RenderChunkLookup.camera(camera, player));
+        assertEquals(320, RenderChunkLookup.camera(camera, player).posX, 0);
+        assertEquals(0, player.posX, 0);
+        assertSame(player, RenderChunkLookup.camera(null, player));
+        assertNull(RenderChunkLookup.camera((net.minecraft.entity.Entity) null, null));
+    }
+
+    private static class CameraEntity extends net.minecraft.entity.Entity {
+        CameraEntity() { super(null); }
+        protected void entityInit() {}
+        protected void readEntityFromNBT(net.minecraft.nbt.NBTTagCompound tag) {}
+        protected void writeEntityToNBT(net.minecraft.nbt.NBTTagCompound tag) {}
+    }
 }

@@ -17,6 +17,8 @@ import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Keyboard;
 
 import dev.froyln.bobby112.cache.ChunkCache;
+import dev.froyln.bobby112.cache.RenderChunkLookup;
+import net.minecraft.entity.Entity;
 
 @ExposableOptions(filename = "bobby112.json")
 public class LiteModBobby112 implements Tickable {
@@ -68,9 +70,10 @@ public class LiteModBobby112 implements Tickable {
             }
         }
         WorldClient world = client.world;
-        if (enabled && world != null && client.player != null) {
-            ChunkCache.scanAround(world, MathHelper.floor(client.player.posX) >> 4,
-                    MathHelper.floor(client.player.posZ) >> 4, client.gameSettings.renderDistanceChunks + 2);
+        Entity camera = RenderChunkLookup.camera(client);
+        if (enabled && world != null && camera != null) {
+            ChunkCache.scanAround(world, MathHelper.floor(camera.posX) >> 4,
+                    MathHelper.floor(camera.posZ) >> 4, client.gameSettings.renderDistanceChunks + 2);
         }
     }
 
