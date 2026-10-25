@@ -86,4 +86,19 @@ public class CacheRetentionTest {
 
         assertFalse(retention.isSafeDirectory(new File(profile, "0")));
     }
+    @Test
+    public void inspectionFailureDisablesPersistence() throws Exception {
+        org.junit.Assume.assumeTrue(java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        File root = temporaryFolder.newFolder("unreadable");
+        java.util.Set<java.nio.file.attribute.PosixFilePermission> original = Files.getPosixFilePermissions(root.toPath());
+        try {
+            Files.setPosixFilePermissions(root.toPath(), java.util.Collections.emptySet());
+            org.junit.Assume.assumeFalse(Files.isReadable(root.toPath()));
+            CacheRetention retention = new CacheRetention(root, 8L * 1024 * 1024);
+            assertFalse(retention.isValid());
+            assertFalse(retention.canSave());
+        } finally {
+            Files.setPosixFilePermissions(root.toPath(), original);
+        }
+    }
 }
