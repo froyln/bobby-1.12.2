@@ -1,6 +1,8 @@
 package dev.froyln.bobby112.cache;
 
 import net.minecraft.client.multiplayer.ChunkProviderClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.Entity;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -10,6 +12,14 @@ public final class RenderChunkLookup {
     private static final ThreadLocal<Boolean> RENDER_CACHE_BUILD = new ThreadLocal<>();
 
     private RenderChunkLookup() {
+    }
+
+    public static Entity camera(Minecraft client) {
+        return camera(client.getRenderViewEntity(), client.player);
+    }
+
+    static Entity camera(Entity view, Entity player) {
+        return view == null ? player : view;
     }
 
     public static ChunkCacheScope beginCacheBuild() {

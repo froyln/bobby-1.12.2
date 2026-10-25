@@ -1,6 +1,8 @@
 package dev.froyln.bobby112.mixin.liteoptimizer;
 
 import dev.froyln.bobby112.cache.ChunkCache;
+import dev.froyln.bobby112.cache.RenderChunkLookup;
+import net.minecraft.entity.Entity;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ChunkProviderClient;
@@ -29,9 +31,10 @@ public abstract class SodiumWorldRendererMixin {
         SodiumWorldRendererAccessors self = (SodiumWorldRendererAccessors) this;
         Minecraft client = self.bobby112$client();
         WorldClient world = self.bobby112$world();
-        if (world != null && world == client.world && client.player != null
+        Entity camera = RenderChunkLookup.camera(client);
+        if (world != null && world == client.world && camera != null
                 && ChunkCache.withinDistance(ChunkPos.asLong(x, z),
-                MathHelper.floor(client.player.posX) >> 4, MathHelper.floor(client.player.posZ) >> 4,
+                MathHelper.floor(camera.posX) >> 4, MathHelper.floor(camera.posZ) >> 4,
                 client.gameSettings.renderDistanceChunks + 1)
                 && ChunkCache.get(world, x, z) != null) {
             ci.cancel();
@@ -43,13 +46,14 @@ public abstract class SodiumWorldRendererMixin {
         SodiumWorldRendererAccessors self = (SodiumWorldRendererAccessors) this;
         WorldClient world = self.bobby112$world();
         Minecraft client = self.bobby112$client();
-        if (world == null || client.player == null) {
+        Entity camera = RenderChunkLookup.camera(client);
+        if (world == null || camera == null) {
             return;
         }
 
         LongSet loaded = self.bobby112$loadedChunks();
-        int centerX = MathHelper.floor(client.player.posX) >> 4;
-        int centerZ = MathHelper.floor(client.player.posZ) >> 4;
+        int centerX = MathHelper.floor(camera.posX) >> 4;
+        int centerZ = MathHelper.floor(camera.posZ) >> 4;
         int distance = client.gameSettings.renderDistanceChunks + 1;
         ChunkProviderClient provider = world.getChunkProvider();
 
