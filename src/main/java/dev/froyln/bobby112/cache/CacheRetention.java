@@ -26,11 +26,20 @@ final class CacheRetention {
         this.root = root;
         this.maxBytes = maxBytes;
         File parent = root.getParentFile();
-        this.valid = !Files.isSymbolicLink(parent.toPath()) && !Files.isSymbolicLink(root.toPath());
-        this.bytes = valid ? prune(root, Math.max(0L, maxBytes - WRITE_HEADROOM - 1L)) : maxBytes;
-        if (!valid) {
+        boolean safe = !Files.isSymbolicLink(parent.toPath()) && !Files.isSymbolicLink(root.toPath());
+        long measured = maxBytes;
+        if (!safe) {
             System.err.println("[Bobby 1.12.2] Cache root is a symbolic link; persistent cache is disabled.");
+        } else {
+            try {
+                measured = prune(root, Math.max(0L, maxBytes - WRITE_HEADROOM - 1L));
+            } catch (IOException | SecurityException e) {
+                safe = false;
+                System.err.println("[Bobby 1.12.2] Could not inspect cache; persistence is disabled: " + e.getMessage());
+            }
         }
+        this.valid = safe;
+        this.bytes = measured;
     }
 
     synchronized boolean isValid() {
@@ -73,14 +82,13 @@ final class CacheRetention {
         bytes = Math.max(0L, bytes + change);
     }
 
-    private static long prune(File root, long maxBytes) {
+    private static long prune(File root, long maxBytes) throws IOException {
         List<Region> regions = new ArrayList<>();
         Path rootPath = root.toPath();
-        if (!Files.exists(rootPath)) {
+        if (Files.notExists(rootPath)) {
             return 0L;
         }
-        try {
-            Files.walkFileTree(rootPath, new SimpleFileVisitor<Path>() {
+        Files.walkFileTree(rootPath, new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
                     if (attributes.isRegularFile() && "region".equals(file.getParent().getFileName().toString())
@@ -89,11 +97,7 @@ final class CacheRetention {
                     }
                     return FileVisitResult.CONTINUE;
                 }
-            });
-        } catch (IOException e) {
-            System.err.println("[Bobby 1.12.2] Could not inspect cache for retention: " + e.getMessage());
-            return maxBytes;
-        }
+        });
 
         long total = 0L;
         for (Region region : regions) {
