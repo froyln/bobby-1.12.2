@@ -13,6 +13,7 @@ public class CacheRenderDistanceTest {
         dev.froyln.bobby112.LiteModBobby112 config = new com.google.gson.Gson().fromJson(
                 "{\"enabled\":true}", dev.froyln.bobby112.LiteModBobby112.class);
         assertEquals(16, config.cacheRenderDistance);
+        org.junit.Assert.assertFalse(config.fallbackEnabled);
     }
     @Test public void boundsConfiguredDistance() {
         assertEquals(32, CacheRenderDistance.effective(2, Integer.MAX_VALUE, true));

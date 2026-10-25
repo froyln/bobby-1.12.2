@@ -38,6 +38,31 @@ public class ChunkCacheTest {
     }
 
     @Test
+    public void fallbackToggleClearsResidentsAndInvalidatesOldRequests() {
+        ChunkCache.setFallbackEnabled(false);
+        ChunkCache.setEnabled(false);
+        ChunkCache.setEnabled(true);
+        ChunkCache.begin(null);
+        ChunkCache.updateWindow(0, 0, 4, new LongOpenHashSet());
+        ChunkCache.store(null, new Chunk(null, 0, 0));
+        Object old = ChunkCache.beginLoad(null, 1, 0);
+        assertEquals(1, ChunkCache.size(null));
+        try {
+            assertTrue(ChunkCache.setFallbackEnabled(true));
+            assertFalse(ChunkCache.setFallbackEnabled(true));
+            assertEquals(0, ChunkCache.size(null));
+            assertFalse(ChunkCache.renderWindowContains(null, 0, 0));
+            ChunkCache.updateWindow(0, 0, 4, new LongOpenHashSet());
+            Object current = ChunkCache.beginLoad(null, 1, 0);
+            assertTrue(current != null && current != old);
+            ChunkCache.loadDeferred(null, 1, 0, old);
+            assertTrue(ChunkCache.beginLoad(null, 1, 0) == null);
+        } finally {
+            ChunkCache.setFallbackEnabled(false);
+        }
+    }
+
+    @Test
     public void boundsFailedLoadHistory() {
         Long2ObjectLinkedOpenHashMap<Long> failures = new Long2ObjectLinkedOpenHashMap<>();
         for (int pos = 0; pos <= 256; pos++) {

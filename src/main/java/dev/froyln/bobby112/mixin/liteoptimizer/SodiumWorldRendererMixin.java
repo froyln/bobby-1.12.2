@@ -65,27 +65,24 @@ public abstract class SodiumWorldRendererMixin {
         int centerZ = MathHelper.floor(camera.posZ) >> 4;
         int distance = CacheRenderDistance.get(client.gameSettings.renderDistanceChunks) + 1;
         ChunkProviderClient provider = world.getChunkProvider();
+        LongSet desired = RenderChunkLookup.connectedColumns(ChunkCache.positions(world), centerX, centerZ, distance);
 
         for (long pos : loaded.toLongArray()) {
             int x = ChunkCache.chunkX(pos);
             int z = ChunkCache.chunkZ(pos);
             if (provider.getLoadedChunk(x, z) == null
-                    && (!ChunkCache.withinDistance(pos, centerX, centerZ, distance)
-                    || ChunkCache.get(world, x, z) == null)) {
+                    && !desired.contains(pos)) {
                 self.bobby112$removeChunk(x, z);
                 ChunkCache.invalidateColumn(world, x, z);
             }
         }
 
-        for (long pos : ChunkCache.positions(world)) {
+        for (long pos : desired) {
             int x = ChunkCache.chunkX(pos);
             int z = ChunkCache.chunkZ(pos);
-            if (ChunkCache.withinDistance(pos, centerX, centerZ, distance)
-                    && provider.getLoadedChunk(x, z) == null && !loaded.contains(pos)) {
-                if (ChunkCache.get(world, x, z) != null) {
-                    self.bobby112$addChunk(x, z);
-                    ChunkCache.invalidateColumn(world, x, z);
-                }
+            if (provider.getLoadedChunk(x, z) == null && !loaded.contains(pos)) {
+                self.bobby112$addChunk(x, z);
+                ChunkCache.invalidateColumn(world, x, z);
             }
         }
     }

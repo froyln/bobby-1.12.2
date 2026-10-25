@@ -25,6 +25,7 @@ Explore an area first, then move away. With your client render distance set high
 - **Persistent terrain cache** — keep explored terrain between sessions.
 - **Live terrain takes priority** — newly received server data replaces cached terrain.
 - **Separate world and dimension caches** — store snapshots outside your world saves.
+- **Read-only fallback world** — optionally display terrain from a matching Minecraft 1.12.2 world copy.
 - **Independent terrain distance** — display explored chunks beyond the live distance in singleplayer or multiplayer.
 - **In-game toggle** — hide or restore cached terrain with a configurable key.
 - **Background disk loading and saving** — keep file work off the client thread.
@@ -51,13 +52,22 @@ You can also edit `liteconfig/common/bobby112.json` in your instance’s Minecra
 ```json
 {
   "enabled": true,
-  "cacheRenderDistance": 16
+  "cacheRenderDistance": 16,
+  "fallbackEnabled": false
 }
 ```
 
 `cacheRenderDistance` sets how far explored cached terrain can be displayed, independently of Minecraft’s render distance. It defaults to 16 chunks and is limited to 2–32. The visible terrain range uses the larger of the two settings; Minecraft’s setting still controls live chunk requests and singleplayer loading. For example, use Minecraft distance 6 and cache distance 16 to display explored terrain beyond the live area. Explore that terrain first: Bobby does not generate unseen chunks.
 
 Changes are reloaded while Minecraft is running. Disabling Bobby restores Minecraft’s normal terrain distance.
+
+## Fallback world
+
+To fill areas missing from the recorded cache, copy a matching **Minecraft 1.12.2 Anvil world** into `saves/bobby-fallback` and set `fallbackEnabled` to `true`. Keep its `region/`, `DIM-1/region/` and `DIM1/region/` directories in their original layout.
+
+Live chunks take priority, followed by recorded cache, then fallback terrain. The fallback files are opened read-only: Bobby does not generate, repair, convert or save that world. Entities, block entities and scheduled ticks are excluded. Modern world formats and symlinked sources are not supported.
+
+The fallback is shared by this Minecraft instance. Enable it only while playing the matching world/server, and disable it when switching to an unrelated world. Changes to the option reload terrain automatically; after replacing fallback files, toggle the option off and on to refresh them.
 
 ## Cache storage
 
@@ -81,7 +91,7 @@ The project uses the included Gradle wrapper, MCP stable_39 mappings, and LiteLo
 
 ## Current limitations
 
-- Fallback worlds and a native settings panel are not implemented.
+- A native settings panel is not implemented; settings are available through JSON and the enable/disable key.
 - Servers hosting multiple worlds behind one address can share a cache identity; user-selectable world profiles are not implemented.
 - Full upstream Bobby feature parity and broad modpack compatibility are not established. A dedicated-server check with a smaller server view distance remains outstanding.
 

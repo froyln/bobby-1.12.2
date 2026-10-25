@@ -8,7 +8,7 @@ Create a client mod for Minecraft 1.12.2 and LiteLoader implementing Bobby-style
 
 [Bobby’s description](https://www.curseforge.com/minecraft/mc-mods/bobby) describes storing chunks received from a server and displaying them beyond the server’s view distance, optional terrain from a local `bobby-fallback` world, automatic configuration reload, and an optional configuration screen. Packaged persistence and local travel have runtime evidence. The independent cached distance keeps the live setting unchanged; a dedicated smaller-view-distance remote-server test remains outstanding. The LiteLoader JSON `enabled` setting has an in-game Controls binding, saved state and runtime disable/re-enable checks. A native settings-panel attempt failed during packaged Mixin class loading and is not included in the current source. Its Fabric integration and ModMenu/ClothConfig UI cannot be assumed to transfer to LiteLoader.
 
-The feature inventory must cover persistent chunk caching, distant rendering, session reload, fallback worlds, configuration reload, and configuration UI. Establish a feasible LiteLoader equivalent for each before claiming feature parity. The prototype stores terrain in versioned Anvil region files under `.bobby112/v1/` with a fixed 2 GiB retention budget. Selectable remote-world profiles and existing Bobby cache compatibility are not implemented.
+[Feature coverage](FEATURES.md) tracks persistent chunk caching, distant rendering, session reload, fallback worlds, configuration reload, UI and additional upstream settings explicitly. The opt-in fallback reads only 1.12.2 Anvil terrain and strips simulation data; JSON plus the Controls toggle is the current configuration surface. A native panel and full upstream parity remain unimplemented. The prototype stores terrain in versioned Anvil region files under `.bobby112/v1/` with a fixed 2 GiB retention budget. Selectable remote-world profiles and existing Bobby cache compatibility are not implemented.
 
 ## Compatibility constraints
 
@@ -22,11 +22,11 @@ Cache writes must not modify existing saves. Define bounded memory use, loading 
 
 ## Decisions still required
 
-- Mod ID, package name, project license, and attribution requirements before reusing upstream code.
-- Reproducible LiteLoader build and dependency availability, exact versions, and artifact name.
-- Source-backed chunk and rendering hooks compatible with a pinned LiteOptimizer revision.
-- Cache identity, format, location, retention, and asynchronous ownership rules.
-- Feasibility and implementation order for fallback worlds and the remaining Bobby settings; a native settings panel and the remaining configuration controls.
+- Project license and attribution requirements before reusing upstream code.
+- Supported LiteOptimizer version range beyond the specific inspected/runtime builds.
+- Explicit world selection for proxy servers that share one cache identity, and any automatic matching behavior.
+- The remaining upstream settings, native configuration panel and feature gaps listed in [feature coverage](FEATURES.md).
+- Dedicated-server and broader release validation. Java8/MCP stable_39/LiteLoader packaging, cache storage ownership, bounded asynchronous persistence, independent distance and read-only fallback terrain already have implementation and focused evidence.
 
 ## Evidence required before release
 

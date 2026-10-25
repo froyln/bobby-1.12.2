@@ -40,9 +40,11 @@ final class ChunkStorage {
     private final CachedChunkLoader loader;
     private final CacheRetention retention;
     private final File directory;
+    private final FallbackWorld fallback;
 
-    ChunkStorage(File directory, CacheRetention retention) {
+    ChunkStorage(File directory, CacheRetention retention, FallbackWorld fallback) {
         this.directory = directory;
+        this.fallback = fallback;
         this.retention = retention;
         this.loader = new CachedChunkLoader(directory, DataFixesManager.createFixer());
     }
@@ -132,15 +134,7 @@ final class ChunkStorage {
     void load(WorldClient world, int x, int z, Object token) {
         try {
             IO.execute(() -> {
-                boolean generated;
-                synchronized (REGION_IO_LOCK) {
-                    generated = PENDING_SAVES.latest(saveKey(x, z)) != null || loader.isChunkGeneratedAt(x, z);
-                }
-                if (generated) {
-                    loadNow(world, x, z, token);
-                } else {
-                    ChunkCache.loadFailed(world, x, z, token);
-                }
+                loadNow(world, x, z, token);
             });
         } catch (RejectedExecutionException full) {
             ChunkCache.loadDeferred(world, x, z, token);
@@ -160,15 +154,7 @@ final class ChunkStorage {
                             }
                             Object token = ChunkCache.beginLoad(world, x, z);
                             if (token != null) {
-                                boolean generated;
-                                synchronized (REGION_IO_LOCK) {
-                                    generated = PENDING_SAVES.latest(saveKey(x, z)) != null || loader.isChunkGeneratedAt(x, z);
-                                }
-                                if (generated) {
-                                    loadNow(world, x, z, token);
-                                } else {
-                                    ChunkCache.loadFailed(world, x, z, token);
-                                }
+                                loadNow(world, x, z, token);
                             }
                         }
                     }
@@ -186,10 +172,18 @@ final class ChunkStorage {
 
     private void loadNow(WorldClient world, int x, int z, Object token) {
         try {
-            Chunk chunk;
-            synchronized (REGION_IO_LOCK) {
-                Chunk pending = PENDING_SAVES.latest(saveKey(x, z));
-                chunk = pending == null ? loader.loadChunk(world, x, z) : ChunkCache.copySnapshot(world, pending);
+            Chunk chunk = null;
+            try {
+                synchronized (REGION_IO_LOCK) {
+                    Chunk pending = PENDING_SAVES.latest(saveKey(x, z));
+                    chunk = pending == null ? (loader.isChunkGeneratedAt(x, z) ? loader.loadChunk(world, x, z) : null)
+                            : ChunkCache.copySnapshot(world, pending);
+                }
+            } catch (IOException | RuntimeException e) {
+                e.printStackTrace();
+            }
+            if (chunk == null && ChunkCache.isFallbackEnabled()) {
+                chunk = fallback.load(world, x, z, loader);
             }
             if (chunk != null) {
                 ChunkCache.loaded(world, x, z, chunk, token);

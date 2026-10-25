@@ -39,6 +39,8 @@ public class RenderChunkLookupTest {
         ChunkCache.updateWindow(0, 0, 4, new LongOpenHashSet());
         ChunkCache.store(null, new Chunk(null, 0, 0));
         provider.loadChunk(0, 0);
+        assertTrue(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));
+        ChunkCache.setEnabled(false);
         assertFalse(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));
         provider.loadChunk(1, 0);
         assertTrue(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));
@@ -53,6 +55,17 @@ public class RenderChunkLookupTest {
         assertEquals(0, player.posX, 0);
         assertSame(player, RenderChunkLookup.camera(null, player));
         assertNull(RenderChunkLookup.camera((net.minecraft.entity.Entity) null, null));
+    }
+
+    @Test
+    public void connectsSparseCachedIslandsWithBoundedRenderOnlyColumns() {
+        it.unimi.dsi.fastutil.longs.LongSet columns = RenderChunkLookup.connectedColumns(
+                new long[]{net.minecraft.util.math.ChunkPos.asLong(8, 0)}, 0, 0, 10);
+        assertEquals(9, columns.size());
+        for (int x = 0; x <= 8; x++) assertTrue(columns.contains(net.minecraft.util.math.ChunkPos.asLong(x, 0)));
+        assertTrue(RenderChunkLookup.connectedColumns(new long[0], 0, 0, 10).isEmpty());
+        assertTrue(RenderChunkLookup.connectedColumns(new long[]{net.minecraft.util.math.ChunkPos.asLong(34, 0)}, 0, 0, 100).isEmpty());
+        assertEquals(1, RenderChunkLookup.connectedColumns(new long[]{net.minecraft.util.math.ChunkPos.asLong(Integer.MAX_VALUE, Integer.MIN_VALUE)}, Integer.MAX_VALUE, Integer.MIN_VALUE, 10).size());
     }
 
     private static class CameraEntity extends net.minecraft.entity.Entity {
