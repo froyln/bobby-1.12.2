@@ -20,4 +20,3 @@ LiteOptimizer integration covers `ChunkRenderManager.createChunkRender` before i
 - Anvil reads and writes through the separate loader never touch the active world save.
 - Cached terrain can be meshed with vanilla and LiteOptimizer while live chunks replace it cleanly.
 - World/session changes, corrupt files, I/O failures and longer-session queue saturation recover without stale terrain or data loss.
-
