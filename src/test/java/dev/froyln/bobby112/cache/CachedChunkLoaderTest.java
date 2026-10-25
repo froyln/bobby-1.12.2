@@ -39,4 +39,27 @@ public class CachedChunkLoaderTest {
         root.setTag("Level", level);
         assertNull(loader.checkedReadChunkFromNBT(null, 0, 0, root));
     }
+    @Test
+    public void detectsSwallowedRegionErrorsAndRetriesWithANewHandle() throws Exception {
+        java.io.File directory = temporary.newFolder();
+        CachedChunkLoader loader = new CachedChunkLoader(directory, new DataFixer(1343));
+        net.minecraft.util.math.ChunkPos pos = new net.minecraft.util.math.ChunkPos(0, 0);
+        NBTTagCompound old = new NBTTagCompound(); old.setInteger("value", 1);
+        loader.writeVerified(pos, old);
+        net.minecraft.world.chunk.storage.RegionFileCache.getRegionFileIfExists(directory, 0, 0).close();
+        NBTTagCompound updated = new NBTTagCompound(); updated.setInteger("value", 2);
+        PendingSaveQueue<Integer> queue = new PendingSaveQueue<>(1);
+        java.util.concurrent.atomic.AtomicInteger attempts = new java.util.concurrent.atomic.AtomicInteger();
+        queue.offer("chunk", 2, () -> {
+            attempts.incrementAndGet();
+            try { loader.writeVerified(pos, updated); }
+            catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
+        });
+        queue.poll().run();
+        assertEquals(2, attempts.get());
+        try (java.io.DataInputStream in = net.minecraft.world.chunk.storage.RegionFileCache.getChunkInputStream(directory, 0, 0)) {
+            assertEquals(updated, net.minecraft.nbt.CompressedStreamTools.read(in));
+        }
+        assertNull(queue.latest("chunk"));
+    }
 }

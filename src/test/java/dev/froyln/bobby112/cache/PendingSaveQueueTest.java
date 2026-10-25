@@ -78,4 +78,36 @@ public class PendingSaveQueueTest {
             assertNull(queue.latest("chunk"));
         }
     }
+    @Test
+    public void retriesTransientFailureWhileKeepingNewestSnapshotReadable() {
+        PendingSaveQueue<Integer> queue = new PendingSaveQueue<>(1);
+        AtomicInteger attempts = new AtomicInteger();
+        queue.offer("chunk", 42, () -> {
+            assertEquals(Integer.valueOf(42), queue.latest("chunk"));
+            if (attempts.incrementAndGet() < 3) throw new IllegalStateException("temporary");
+        });
+        queue.poll().run();
+        assertEquals(3, attempts.get());
+        assertNull(queue.latest("chunk"));
+    }
+
+    @Test
+    public void newerSnapshotSupersedesRetryAndPermanentFailuresAreCapped() {
+        PendingSaveQueue<Integer> queue = new PendingSaveQueue<>(1);
+        AtomicInteger attempts = new AtomicInteger();
+        queue.offer("chunk", 1, () -> {
+            attempts.incrementAndGet();
+            queue.offer("chunk", 2, () -> {});
+            throw new IllegalStateException("old write");
+        });
+        queue.poll().run();
+        assertEquals(1, attempts.get());
+        assertEquals(Integer.valueOf(2), queue.latest("chunk"));
+        queue.poll().run();
+        attempts.set(0);
+        queue.offer("bad", 3, () -> { attempts.incrementAndGet(); throw new IllegalStateException("permanent"); });
+        try { queue.poll().run(); org.junit.Assert.fail("expected failure"); }
+        catch (IllegalStateException expected) { assertEquals(3, attempts.get()); }
+        assertNull(queue.latest("bad"));
+    }
 }
