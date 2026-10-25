@@ -44,7 +44,7 @@ final class ChunkStorage {
     ChunkStorage(File directory, CacheRetention retention) {
         this.directory = directory;
         this.retention = retention;
-        this.loader = new AnvilChunkLoader(directory, DataFixesManager.createFixer()) {
+        this.loader = new CachedChunkLoader(directory, DataFixesManager.createFixer()) {
             @Override
             public boolean writeNextIO() {
                 synchronized (REGION_IO_LOCK) {
