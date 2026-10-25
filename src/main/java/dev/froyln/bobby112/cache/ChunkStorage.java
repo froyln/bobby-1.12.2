@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -85,6 +87,27 @@ final class ChunkStorage {
             if (!saveDrainScheduled) {
                 saveDrainScheduled = true;
                 SAVE_IO.execute(ChunkStorage::drainSaves);
+            }
+        }
+    }
+
+    static void flush() {
+        Future<?> drained = SAVE_IO.submit(ChunkStorage::drainSaves);
+        boolean interrupted = false;
+        try {
+            while (true) {
+                try {
+                    drained.get();
+                    return;
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                }
+            }
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Could not drain terrain cache saves", e.getCause());
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
             }
         }
     }
