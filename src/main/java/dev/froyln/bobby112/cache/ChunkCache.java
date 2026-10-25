@@ -347,6 +347,10 @@ public final class ChunkCache {
         return currentWorld == world && scanGeneration == generation;
     }
 
+    static synchronized boolean renderWindowContains(World world, int x, int z) {
+        return enabled && currentWorld == world && withinView(ChunkPos.asLong(x, z));
+    }
+
     static synchronized boolean contains(World world, int x, int z) {
         return currentWorld == world && CHUNKS.containsKey(ChunkPos.asLong(x, z));
     }

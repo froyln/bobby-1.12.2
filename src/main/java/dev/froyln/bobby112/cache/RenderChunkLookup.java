@@ -46,7 +46,7 @@ public final class RenderChunkLookup {
                                            int centerX, int centerZ, int neighborX, int neighborZ) {
         Chunk neighbor = getCachedOrLive(world, neighborX, neighborZ, provider);
         return !neighbor.isEmpty() || (provider.getLoadedChunk(centerX, centerZ) == null
-                && ChunkCache.get(world, centerX, centerZ) != null);
+                && ChunkCache.renderWindowContains(world, centerX, centerZ));
     }
 
     public static final class ChunkCacheScope implements AutoCloseable {

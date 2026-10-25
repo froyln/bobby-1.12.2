@@ -25,6 +25,7 @@ Explore an area first, then move away. With your client render distance set high
 - **Persistent terrain cache** — keep explored terrain between sessions.
 - **Live terrain takes priority** — newly received server data replaces cached terrain.
 - **Separate world and dimension caches** — store snapshots outside your world saves.
+- **Independent terrain distance** — display explored chunks beyond the live distance in singleplayer or multiplayer.
 - **In-game toggle** — hide or restore cached terrain with a configurable key.
 - **Background disk loading and saving** — keep file work off the client thread.
 
@@ -49,15 +50,18 @@ You can also edit `liteconfig/common/bobby112.json` in your instance’s Minecra
 
 ```json
 {
-  "enabled": true
+  "enabled": true,
+  "cacheRenderDistance": 16
 }
 ```
 
-Changes are reloaded while Minecraft is running.
+`cacheRenderDistance` sets how far explored cached terrain can be displayed, independently of Minecraft’s render distance. It defaults to 16 chunks and is limited to 2–32. The visible terrain range uses the larger of the two settings; Minecraft’s setting still controls live chunk requests and singleplayer loading. For example, use Minecraft distance 6 and cache distance 16 to display explored terrain beyond the live area. Explore that terrain first: Bobby does not generate unseen chunks.
+
+Changes are reloaded while Minecraft is running. Disabling Bobby restores Minecraft’s normal terrain distance.
 
 ## Cache storage
 
-Terrain is stored under `.bobby112/v1/` inside the instance’s Minecraft folder, separately from `saves/`. The current disk budget is **2 GiB**, shared across cached worlds. Resident terrain follows your client render-distance window.
+Terrain is stored under `.bobby112/v1/` inside the instance’s Minecraft folder, separately from `saves/`. The current disk budget is **2 GiB**, shared across cached worlds. Resident terrain follows the larger of your live and cached render distances, with two extra columns for meshing neighbors.
 
 Cached chunks are visual snapshots. They may be outdated, and they do not keep farms running, simulate entities, or extend interaction distance.
 
