@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import io.netty.buffer.Unpooled;
+import dev.froyln.bobby112.mixin.ChunkProviderClientAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -67,6 +68,29 @@ public final class ChunkCache {
 
     public static boolean isEnabled() {
         return enabled;
+    }
+
+    public static void captureRemaining(WorldClient world) {
+        if (world != null) {
+            captureRemaining(world, ((ChunkProviderClientAccessor) world.getChunkProvider()).bobby112$loadedChunks().values());
+        }
+    }
+
+    static void captureRemaining(WorldClient world, Iterable<Chunk> chunks) {
+        synchronized (ChunkCache.class) {
+            if (!enabled || currentWorld != world) {
+                return;
+            }
+        }
+        flushPendingSaves();
+        int count = 0;
+        for (Chunk chunk : chunks) {
+            store(world, chunk);
+            if (++count % 512 == 0) {
+                flushPendingSaves();
+            }
+        }
+        flushPendingSaves();
     }
 
     public static void flushPendingSaves() {

@@ -126,4 +126,30 @@ public class ChunkCacheTest {
         ChunkCache.setEnabled(false);
         ChunkCache.setEnabled(true);
     }
+    @Test
+    public void capturesRemainingLiveSnapshotsIncludingLatestChanges() {
+        ChunkCache.setEnabled(false);
+        ChunkCache.setEnabled(true);
+        ChunkCache.begin(null);
+        ChunkCache.updateWindow(0, 0, 34, new LongOpenHashSet());
+        java.util.List<Chunk> live = new java.util.ArrayList<>();
+        for (int i = 0; i < 1100; i++) {
+            live.add(new Chunk(null, i % 34, i / 34));
+        }
+        live.get(0).getBiomeArray()[0] = 42;
+        ChunkCache.captureRemaining(null, live);
+        assertEquals(1100, ChunkCache.size(null));
+        live.get(0).getBiomeArray()[0] = 53;
+        assertEquals(42, ChunkCache.get(null, 0, 0).getBiomeArray()[0]);
+        ChunkCache.setEnabled(false);
+        ChunkCache.setEnabled(true);
+    }
+
+    @Test
+    public void disabledCacheDoesNotCaptureDepartingWorld() {
+        ChunkCache.setEnabled(false);
+        ChunkCache.captureRemaining(null, () -> { throw new AssertionError("must not enumerate live chunks"); });
+        assertEquals(0, ChunkCache.size(null));
+        ChunkCache.setEnabled(true);
+    }
 }

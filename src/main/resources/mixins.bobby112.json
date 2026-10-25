@@ -8,6 +8,7 @@
   "mixins": [],
   "client": [
     "ChunkProviderClientMixin",
+    "ChunkProviderClientAccessor",
     "MinecraftMixin",
     "RenderChunkMixin",
     "ChunkRenderWorkerMixin",
