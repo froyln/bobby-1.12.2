@@ -69,6 +69,10 @@ public final class ChunkCache {
         return enabled;
     }
 
+    public static void flushPendingSaves() {
+        ChunkStorage.flush();
+    }
+
     public static synchronized void begin(World world) {
         if (currentWorld != world) {
             CHUNKS.clear();

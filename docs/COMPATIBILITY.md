@@ -86,3 +86,9 @@ Test the packaged mod alone, with LiteOptimizer's default renderer enabled, and 
 Snapshots remain outside the gameplay provider. Vanilla render-cache construction and worker neighbor checks can resolve them. LiteOptimizer section creation, worker slices, cloned sections and biome queries use live terrain first and cached terrain second. Renderer column changes rebuild neighboring meshes and invalidate cloned sections. The resident window extends two columns beyond the client distance, up to radius 34 for the supported maximum distance of 32. Disk publication rejects stale world tokens, live replacements and columns outside that window.
 
 Snapshots store copied block states, lighting, biomes and height data in a separate `.bobby112/v1/` Anvil tree. See [architecture](ARCHITECTURE.md) for storage bounds and remaining identity limitations.
+
+## Persistence regression checks (2026-10-25)
+
+Startup retention now reclaims enough room below the write threshold to resume saving. Read queue rejection permits another request, and failed reads use a bounded two-second retry backoff. Queued and actively written terrain is available to reads before older disk copies.
+
+Orderly shutdown drains accepted saves. A packaged isolated MultiMC check with Sodium enabled queued 1,000 delayed fixture writes and immediately requested shutdown; all 1,000 completed before exit. Unit checks cover a blocked active writer plus 1,000 queued writes, continuation after a failed task and interruption preservation. Forced termination remains outside this guarantee.
