@@ -18,7 +18,7 @@
 
 Bobby 1.12.2 saves terrain your client receives and keeps it available for rendering after the server unloads it. Revisit an area or reconnect, and previously cached terrain can load from disk.
 
-Explore an area first, then move away. With your client render distance set higher than the server’s view distance, Bobby can fill the surrounding view with terrain you have already seen. It cannot display unexplored terrain.
+Explore an area first, then move away. Set Bobby’s cached distance above Minecraft’s live distance to keep that terrain visible, including in singleplayer. Bobby displays only terrain already recorded or present in an enabled fallback world.
 
 ## Features
 
@@ -27,7 +27,7 @@ Explore an area first, then move away. With your client render distance set high
 - **Separate world and dimension caches** — store snapshots outside your world saves.
 - **Read-only fallback world** — optionally display terrain from a matching Minecraft 1.12.2 world copy.
 - **Independent terrain distance** — display explored chunks beyond the live distance in singleplayer or multiplayer.
-- **In-game toggle** — hide or restore cached terrain with a configurable key.
+- **In-game settings** — configure caching, distance and fallback through LiteLoader; an optional key toggles caching.
 - **Background disk loading and saving** — keep file work off the client thread.
 
 ## Installation
@@ -42,6 +42,8 @@ Requires **Minecraft 1.12.2**, **LiteLoader**, and **Java 8**.
 Install Bobby on the client. No server-side installation is needed.
 
 ## Controls and configuration
+
+Open LiteLoader’s mod list from the chest tab on the main menu or pause menu (or **Ctrl+Shift+Tab** if the tab is hidden). Select **Bobby 1.12.2 → Settings...** to change terrain caching, cached distance, or the fallback world option. Click **Save & Close**, or press **Escape**, to save and apply your changes.
 
 Open **Options → Controls → Bobby 1.12.2** and assign a key to **Toggle Bobby terrain cache**. It starts unassigned to avoid key conflicts.
 
@@ -91,7 +93,6 @@ The project uses the included Gradle wrapper, MCP stable_39 mappings, and LiteLo
 
 ## Current limitations
 
-- A native settings panel is not implemented; settings are available through JSON and the enable/disable key.
 - Servers hosting multiple worlds behind one address can share a cache identity; user-selectable world profiles are not implemented.
 - Full upstream Bobby feature parity and broad modpack compatibility are not established. A dedicated-server check with a smaller server view distance remains outstanding.
 

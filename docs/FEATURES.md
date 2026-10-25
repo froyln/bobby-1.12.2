@@ -9,7 +9,7 @@ This is a Minecraft 1.12.2 LiteLoader implementation inspired by Bobby. It does 
 | Restart/session recovery | Recorded terrain reloads asynchronously; accepted writes drain on orderly shutdown |
 | Fallback world | Opt-in read-only Minecraft 1.12.2 `saves/bobby-fallback`, including dimension directories; live > recorded > fallback |
 | Configuration reload | JSON changes reload while running; enable/disable and fallback changes clear stale render state |
-| Configuration UI | Controls key toggles enabled state; a native settings panel is not included |
+| Configuration UI | Native LiteLoader panel edits caching, distance and fallback; an optional Controls key toggles caching |
 | Cache retention | Fixed 2 GiB budget with startup pruning and write headroom; no configurable quota yet |
 | World identity | Server address plus server-list name, or integrated save folder, separated by dimension |
 | Automatic multiworld detection | Not included; proxy worlds sharing one identity can collide |
