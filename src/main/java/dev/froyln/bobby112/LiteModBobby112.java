@@ -1,6 +1,9 @@
 package dev.froyln.bobby112;
 
 import com.mumfrey.liteloader.Tickable;
+import com.mumfrey.liteloader.Configurable;
+import com.mumfrey.liteloader.modconfig.ConfigPanel;
+import dev.froyln.bobby112.config.BobbyConfigPanel;
 import com.mumfrey.liteloader.core.LiteLoader;
 import com.mumfrey.liteloader.modconfig.ExposableOptions;
 import com.google.gson.Gson;
@@ -22,7 +25,7 @@ import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.entity.Entity;
 
 @ExposableOptions(filename = "bobby112.json")
-public class LiteModBobby112 implements Tickable {
+public class LiteModBobby112 implements Tickable, Configurable {
     public static final String VERSION = "@MOD_VERSION@";
     private static final Gson CONFIG_READER = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 
@@ -47,6 +50,11 @@ public class LiteModBobby112 implements Tickable {
     @Override
     public String getVersion() {
         return VERSION;
+    }
+
+    @Override
+    public Class<? extends ConfigPanel> getConfigPanelClass() {
+        return BobbyConfigPanel.class;
     }
 
     @Override
