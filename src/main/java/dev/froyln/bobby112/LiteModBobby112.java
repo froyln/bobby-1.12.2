@@ -32,6 +32,9 @@ public class LiteModBobby112 implements Tickable {
     @Expose
     public int cacheRenderDistance = 16;
 
+    @Expose
+    public boolean fallbackEnabled = false;
+
     private File configFile;
     private long configModified;
     private KeyBinding toggleKey;
@@ -68,9 +71,10 @@ public class LiteModBobby112 implements Tickable {
                 }
             }
             CacheRenderDistance.configure(cacheRenderDistance);
+            boolean fallbackChanged = ChunkCache.setFallbackEnabled(fallbackEnabled);
             boolean wasEnabled = ChunkCache.isEnabled();
             ChunkCache.setEnabled(enabled);
-            if (wasEnabled != enabled && client.world != null) {
+            if ((wasEnabled != enabled || fallbackChanged) && client.world != null) {
                 client.renderGlobal.loadRenderers();
             }
         }
@@ -92,6 +96,7 @@ public class LiteModBobby112 implements Tickable {
             if (config != null) {
                 enabled = config.enabled;
                 cacheRenderDistance = config.cacheRenderDistance;
+                fallbackEnabled = config.fallbackEnabled;
             }
         } catch (Exception e) {
             System.err.println("[Bobby 1.12.2] Could not reload config: " + e.getMessage());

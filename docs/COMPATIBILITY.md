@@ -49,6 +49,8 @@ Both dimensions also preserved all tested meshes at the immediate live-to-cache 
 - [LiteOptimizer f901f8d](https://github.com/froyln/LiteOptimizer/tree/f901f8de2b12af5c7f6d4f01c1f9bc1da1632661), matching the clean local checkout inspected at `/home/froyln/Dev/LiteOptimizer`.
 - [Bobby 241f973](https://github.com/Johni0702/bobby/tree/241f973106ee4e5552a5950d0a12433c07921c93).
 
+Distance and fallback integration also inspected LiteOptimizer revision `641ffd1459800175cf34430c966816e10eacf0ac`. The runtime jar for those checks is LiteOptimizer 0.6.0-rc2, litemod revision 127, SHA256 `dc5bf8c325a7a2915ff29681657a79b49676df0c0a610df411699cab12d29504`. Its packaged `canRebuild` returns true; the sparse-terrain issue was missing connected visibility nodes, not a neighbor-build gate.
+
 These revisions identify inspected sources; they do not establish a supported version range.
 
 ## LiteOptimizer rendering ownership
@@ -114,3 +116,12 @@ The packaged artifact `d2f095dec7364a7574234d843450af10e4e2239bf8d76976c23d59340
 The vanilla test initially exposed opaque, uncompiled empty columns across an unvisited gap. A direct compile proved the cached target data was valid, and exploring a continuous route allowed normal meshing. Workers now allow unknown empty render sections inside the active bounded cache window to compile, leaving them traversable to the visibility graph. The final fresh-world teleport test passed without forced compilation. Disabled, live-center and outside-window neighbor checks remain covered by regression tests.
 
 JDK8 `./gradlew test build --offline` passes 34 tests; setup and whitespace checks pass. These are controlled integrated-world tests, not an independently limited dedicated-server run or a broad modpack guarantee.
+
+
+## Read-only fallback regression (2026-10-25)
+
+Artifact `7035d79b875f5a30aa7acf941adbde4c910427801a23f208e12001ccfa71efbc` completed the same isolated MultiMC fixture both without LiteOptimizer and with its Sodium renderer enabled, with zero failures in both final runs. At live distance 3/cache 10, a source-only chunk eight columns from the camera rendered from fallback in the Overworld and Nether while absent from the gameplay provider. The fixture checked source dimension selection, no decoded entity/block-entity objects, enable/disable/re-enable, recorded diamond terrain taking priority over fallback gold, and a client live-provider replacement taking priority over both. These are controlled integrated-world/provider checks, not an independently limited dedicated-server protocol test.
+
+Both source region files retained identical bytes and modification times. The fallback-only Nether chunk remained absent from the recorded cache after orderly process shutdown. A separate reader uses read-only handles, strips simulation tags before terrain decoding, rejects modern data and validates bounded Anvil/NBT input. Unit fixtures include read-only file permissions, negative coordinates, missing dimensions, invalid headers/compression, malformed sections, wrong coordinates and symlinked sources. The final JDK8 `./gradlew test build --offline` gate passes 41 tests; setup and whitespace checks pass.
+
+The initial sparse-source run exposed missing Sodium graph connections, corrected with bounded empty render-only columns. A vanilla Overworld run also exposed uncompiled empty sections at the live frontier when neighbors were unknown; the active-window worker exception now covers that frontier. The final runs required no forced target compilation. Larger-distance frame time and broad modpack suitability remain unmeasured. A native settings panel, additional upstream feature parity, licensing and the dedicated-server release gate remain outstanding.

@@ -34,6 +34,7 @@ public final class ChunkCache {
     private static ChunkStorage storage;
     private static CacheRetention retention;
     private static volatile boolean enabled = true;
+    private static volatile boolean fallbackEnabled;
     private static final Map<Long, Object> pendingLoads = new HashMap<>();
     private static final Long2ObjectLinkedOpenHashMap<Long> failedLoads = new Long2ObjectLinkedOpenHashMap<>();
     private static int scanGeneration;
@@ -64,6 +65,22 @@ public final class ChunkCache {
             lastScanX = lastScanZ = lastScanDistance = Integer.MIN_VALUE;
             viewDistance = -1;
         }
+    }
+
+    public static synchronized boolean setFallbackEnabled(boolean value) {
+        if (fallbackEnabled == value) return false;
+        fallbackEnabled = value;
+        CHUNKS.clear();
+        pendingLoads.clear();
+        failedLoads.clear();
+        scanGeneration++;
+        lastScanX = lastScanZ = lastScanDistance = Integer.MIN_VALUE;
+        viewDistance = -1;
+        return true;
+    }
+
+    static boolean isFallbackEnabled() {
+        return fallbackEnabled;
     }
 
     public static boolean isEnabled() {
@@ -116,7 +133,8 @@ public final class ChunkCache {
     private static ChunkStorage createStorage(World world) {
         File directory = world == null ? null : cacheDirectory(world);
         ChunkStorage result = retention == null || !retention.isValid() || directory == null
-                || !retention.isSafeDirectory(directory) ? null : new ChunkStorage(directory, retention);
+                || !retention.isSafeDirectory(directory) ? null : new ChunkStorage(directory, retention, new FallbackWorld(
+                        new File(Minecraft.getMinecraft().gameDir, "saves"), world.provider.getDimensionType().getId()));
         if (world != null && result == null) {
             System.err.println("[Bobby 1.12.2] Cache identity unavailable or path unsafe; disk caching is disabled for this world.");
         }
