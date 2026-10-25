@@ -17,6 +17,7 @@ import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Keyboard;
 
 import dev.froyln.bobby112.cache.ChunkCache;
+import dev.froyln.bobby112.cache.CacheRenderDistance;
 import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.entity.Entity;
 
@@ -27,6 +28,9 @@ public class LiteModBobby112 implements Tickable {
 
     @Expose
     public boolean enabled = true;
+
+    @Expose
+    public int cacheRenderDistance = 16;
 
     private File configFile;
     private long configModified;
@@ -63,6 +67,7 @@ public class LiteModBobby112 implements Tickable {
                     client.ingameGUI.setOverlayMessage("Bobby terrain cache: " + (enabled ? "enabled" : "disabled"), false);
                 }
             }
+            CacheRenderDistance.configure(cacheRenderDistance);
             boolean wasEnabled = ChunkCache.isEnabled();
             ChunkCache.setEnabled(enabled);
             if (wasEnabled != enabled && client.world != null) {
@@ -73,7 +78,7 @@ public class LiteModBobby112 implements Tickable {
         Entity camera = RenderChunkLookup.camera(client);
         if (enabled && world != null && camera != null) {
             ChunkCache.scanAround(world, MathHelper.floor(camera.posX) >> 4,
-                    MathHelper.floor(camera.posZ) >> 4, client.gameSettings.renderDistanceChunks + 2);
+                    MathHelper.floor(camera.posZ) >> 4, CacheRenderDistance.get(client.gameSettings.renderDistanceChunks) + 2);
         }
     }
 
@@ -86,6 +91,7 @@ public class LiteModBobby112 implements Tickable {
             LiteModBobby112 config = CONFIG_READER.fromJson(reader, LiteModBobby112.class);
             if (config != null) {
                 enabled = config.enabled;
+                cacheRenderDistance = config.cacheRenderDistance;
             }
         } catch (Exception e) {
             System.err.println("[Bobby 1.12.2] Could not reload config: " + e.getMessage());

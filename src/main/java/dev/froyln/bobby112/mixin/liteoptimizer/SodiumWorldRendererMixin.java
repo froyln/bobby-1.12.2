@@ -1,6 +1,9 @@
 package dev.froyln.bobby112.mixin.liteoptimizer;
 
 import dev.froyln.bobby112.cache.ChunkCache;
+import dev.froyln.bobby112.cache.CacheRenderDistance;
+import net.minecraft.client.settings.GameSettings;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.entity.Entity;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -18,6 +21,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Pseudo
 @Mixin(targets = "me.jellysquid.mods.sodium.client.render.SodiumWorldRenderer", remap = false)
 public abstract class SodiumWorldRendererMixin {
+    @Redirect(method = {"updateChunks", "initRenderer"}, remap = false, at = @At(value = "FIELD",
+            target = "Lnet/minecraft/client/settings/GameSettings;renderDistanceChunks:I", remap = true))
+    private int bobby112$terrainDistance(GameSettings settings) {
+        return CacheRenderDistance.get(settings.renderDistanceChunks);
+    }
+
     @Inject(method = "onChunkAdded", at = @At("HEAD"), cancellable = true)
     private void bobby112$keepExistingColumn(int x, int z, CallbackInfo ci) {
         SodiumWorldRendererAccessors self = (SodiumWorldRendererAccessors) this;
@@ -35,7 +44,7 @@ public abstract class SodiumWorldRendererMixin {
         if (world != null && world == client.world && camera != null
                 && ChunkCache.withinDistance(ChunkPos.asLong(x, z),
                 MathHelper.floor(camera.posX) >> 4, MathHelper.floor(camera.posZ) >> 4,
-                client.gameSettings.renderDistanceChunks + 1)
+                CacheRenderDistance.get(client.gameSettings.renderDistanceChunks) + 1)
                 && ChunkCache.get(world, x, z) != null) {
             ci.cancel();
         }
@@ -54,7 +63,7 @@ public abstract class SodiumWorldRendererMixin {
         LongSet loaded = self.bobby112$loadedChunks();
         int centerX = MathHelper.floor(camera.posX) >> 4;
         int centerZ = MathHelper.floor(camera.posZ) >> 4;
-        int distance = client.gameSettings.renderDistanceChunks + 1;
+        int distance = CacheRenderDistance.get(client.gameSettings.renderDistanceChunks) + 1;
         ChunkProviderClient provider = world.getChunkProvider();
 
         for (long pos : loaded.toLongArray()) {

@@ -28,9 +28,15 @@ public class RenderChunkLookupTest {
     }
 
     @Test
-    public void missingCenterAndLiveCenterKeepNormalNeighborChecks() {
+    public void emptyRenderSectionsCanBridgeUnvisitedGapsWithinTheWindow() {
         ChunkProviderClient provider = new ChunkProviderClient(null);
+        assertTrue(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));
+        assertNull(provider.getLoadedChunk(0, 0));
+        assertFalse(RenderChunkLookup.hasRenderNeighbor(null, provider, 10, 0, 11, 0));
+        ChunkCache.setEnabled(false);
         assertFalse(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));
+        ChunkCache.setEnabled(true);
+        ChunkCache.updateWindow(0, 0, 4, new LongOpenHashSet());
         ChunkCache.store(null, new Chunk(null, 0, 0));
         provider.loadChunk(0, 0);
         assertFalse(RenderChunkLookup.hasRenderNeighbor(null, provider, 0, 0, 1, 0));

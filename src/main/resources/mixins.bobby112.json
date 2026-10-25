@@ -18,6 +18,7 @@
     "liteoptimizer.SodiumWorldRendererAccessors",
     "liteoptimizer.SodiumWorldRendererMixin",
     "liteoptimizer.WorldSliceMixin",
+    "EntityRendererMixin",
     "RenderGlobalMixin"
   ]
 }
