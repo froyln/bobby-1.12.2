@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.7.4",
+  "package": "dev.froyln.bobby112.mixin",
+  "refmap": "mixins.bobby112.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "injectors": { "defaultRequire": 1 },
+  "mixins": [],
+  "client": [
+    "ChunkProviderClientMixin",
+    "RenderChunkMixin",
+    "ChunkRenderWorkerMixin",
+    "WorldMixin",
+    "liteoptimizer.ClonedChunkSectionMixin",
+    "liteoptimizer.ChunkRenderManagerMixin",
+    "liteoptimizer.SodiumWorldRendererAccessors",
+    "liteoptimizer.SodiumWorldRendererMixin",
+    "liteoptimizer.WorldSliceMixin",
+    "RenderGlobalMixin"
+  ]
+}
