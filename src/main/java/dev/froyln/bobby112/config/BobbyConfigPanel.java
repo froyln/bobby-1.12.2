@@ -15,6 +15,7 @@ public final class BobbyConfigPanel extends AbstractConfigPanel {
     private LiteModBobby112 mod;
     private boolean enabled;
     private boolean fallback;
+    private boolean tint;
     private int distance;
     private int serverDistance;
     private GuiButton serverValue;
@@ -36,6 +37,7 @@ public final class BobbyConfigPanel extends AbstractConfigPanel {
         mod = host.getMod();
         enabled = mod.enabled;
         fallback = mod.fallbackEnabled;
+        tint = mod.tintCachedTerrain;
         distance = Math.max(2, Math.min(32, mod.cacheRenderDistance));
         profileDraft = mod.cacheProfile;
         serverDistance = IntegratedServerDistance.normalize(mod.integratedServerDistance);
@@ -84,12 +86,16 @@ public final class BobbyConfigPanel extends AbstractConfigPanel {
             updateServerDistance();
         });
         updateServerDistance();
+        addControl(new GuiButton(14, 10, 228, width, 20, "Tint cached terrain: " + state(tint)), button -> {
+            tint = !tint;
+            button.displayString = "Tint cached terrain: " + state(tint);
+        });
         List<String> help = mc.fontRenderer.listFormattedStringToWidth(
                 "Blank profile keeps your existing cache. Names: letters, numbers, spaces, . _ -. "
                 + "Reconnect to apply a new profile. Auto live distance follows Minecraft options. "
                 + "Overriding changes singleplayer loading and simulation, including LAN guests. "
                 + "Fallback reads matching saves/bobby-fallback. Terrain is visual only; saved on close.", width);
-        addLabel(7, 10, 228, width, help.size() * 10, 0xBBBBBB, help.toArray(new String[0]));
+        addLabel(7, 10, 262, width, help.size() * 10, 0xBBBBBB, help.toArray(new String[0]));
     }
 
     private void updateServerDistance() {
@@ -147,6 +153,7 @@ public final class BobbyConfigPanel extends AbstractConfigPanel {
             mod.enabled = enabled;
             mod.cacheRenderDistance = distance;
             mod.fallbackEnabled = fallback;
+            mod.tintCachedTerrain = tint;
             mod.integratedServerDistance = serverDistance;
             mod.setCacheProfile(profile.getText());
             LiteLoader.getInstance().writeConfig(mod);

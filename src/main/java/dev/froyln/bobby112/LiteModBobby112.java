@@ -23,6 +23,7 @@ import dev.froyln.bobby112.cache.ChunkCache;
 import dev.froyln.bobby112.cache.CacheProfile;
 import dev.froyln.bobby112.cache.CacheRenderDistance;
 import dev.froyln.bobby112.cache.IntegratedServerDistance;
+import dev.froyln.bobby112.cache.CachedTerrainTint;
 import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.entity.Entity;
 
@@ -45,6 +46,9 @@ public class LiteModBobby112 implements Tickable, Configurable {
 
     @Expose
     public int integratedServerDistance = 0;
+
+    @Expose
+    public boolean tintCachedTerrain = false;
 
     private File configFile;
     private long configModified;
@@ -95,10 +99,11 @@ public class LiteModBobby112 implements Tickable, Configurable {
             setCacheProfile(cacheProfile);
             CacheRenderDistance.configure(cacheRenderDistance);
             IntegratedServerDistance.configure(integratedServerDistance);
+            boolean tintChanged = CachedTerrainTint.configure(tintCachedTerrain);
             boolean fallbackChanged = ChunkCache.setFallbackEnabled(fallbackEnabled);
             boolean wasEnabled = ChunkCache.isEnabled();
             ChunkCache.setEnabled(enabled);
-            if ((wasEnabled != enabled || fallbackChanged) && client.world != null) {
+            if ((wasEnabled != enabled || fallbackChanged || tintChanged) && client.world != null) {
                 client.renderGlobal.loadRenderers();
             }
         }
@@ -127,6 +132,7 @@ public class LiteModBobby112 implements Tickable, Configurable {
                 cacheRenderDistance = config.cacheRenderDistance;
                 fallbackEnabled = config.fallbackEnabled;
                 integratedServerDistance = config.integratedServerDistance;
+                tintCachedTerrain = config.tintCachedTerrain;
                 setCacheProfile(profile);
             }
         } catch (Exception e) {
