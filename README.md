@@ -27,7 +27,7 @@ Explore an area first, then move away. Set Bobby’s cached distance above Minec
 - **Separate world and dimension caches** — store snapshots outside your world saves.
 - **Read-only fallback world** — optionally display terrain from a matching Minecraft 1.12.2 world copy.
 - **Independent terrain distance** — display explored chunks beyond the live distance in singleplayer or multiplayer.
-- **In-game settings** — configure caching, distance and fallback through LiteLoader; an optional key toggles caching.
+- **In-game settings** — configure caching, distance, fallback and profiles through LiteLoader; an optional key toggles caching.
 - **Background disk loading and saving** — keep file work off the client thread.
 
 ## Installation
@@ -43,7 +43,7 @@ Install Bobby on the client. No server-side installation is needed.
 
 ## Controls and configuration
 
-Open LiteLoader’s mod list from the chest tab on the main menu or pause menu (or **Ctrl+Shift+Tab** if the tab is hidden). Select **Bobby 1.12.2 → Settings...** to change terrain caching, cached distance, or the fallback world option. Click **Save & Close**, or press **Escape**, to save and apply your changes.
+Open LiteLoader’s mod list from the chest tab on the main menu or pause menu (or **Ctrl+Shift+Tab** if the tab is hidden). Select **Bobby 1.12.2 → Settings...** to change terrain caching, cached distance, the fallback world option, or the profile for your next connection. Click **Save & Close**, or press **Escape**, to save and apply your changes.
 
 Open **Options → Controls → Bobby 1.12.2** and assign a key to **Toggle Bobby terrain cache**. It starts unassigned to avoid key conflicts.
 
@@ -55,7 +55,8 @@ You can also edit `liteconfig/common/bobby112.json` in your instance’s Minecra
 {
   "enabled": true,
   "cacheRenderDistance": 16,
-  "fallbackEnabled": false
+  "fallbackEnabled": false,
+  "cacheProfile": ""
 }
 ```
 
@@ -63,13 +64,21 @@ You can also edit `liteconfig/common/bobby112.json` in your instance’s Minecra
 
 Changes are reloaded while Minecraft is running. Disabling Bobby restores Minecraft’s normal terrain distance.
 
+## Cache profiles
+
+Use a different `cacheProfile` name for each world behind a proxy address, or after a server reset. Select it in Bobby’s settings **before joining**. If you edit it while playing, disconnect and reconnect to apply it; changing dimension keeps the current connection’s profile.
+
+Blank uses your existing cache. Named profiles start with separate recorded terrain. Select a previous name, or blank, to reopen its cache. Names are case-sensitive, support letters, numbers, spaces, dots, underscores and hyphens, and are limited to 64 characters. Surrounding spaces are trimmed.
+
+Profile selection is manual; Bobby does not detect proxy world switches automatically.
+
 ## Fallback world
 
 To fill areas missing from the recorded cache, copy a matching **Minecraft 1.12.2 Anvil world** into `saves/bobby-fallback` and set `fallbackEnabled` to `true`. Keep its `region/`, `DIM-1/region/` and `DIM1/region/` directories in their original layout.
 
 Live chunks take priority, followed by recorded cache, then fallback terrain. The fallback files are opened read-only: Bobby does not generate, repair, convert or save that world. Entities, block entities and scheduled ticks are excluded. Modern world formats and symlinked sources are not supported.
 
-The fallback is shared by this Minecraft instance. Enable it only while playing the matching world/server, and disable it when switching to an unrelated world. Changes to the option reload terrain automatically; after replacing fallback files, toggle the option off and on to refresh them.
+The fallback is shared by this Minecraft instance, including all cache profiles. Enable it only while playing the matching world/server, and disable it when switching to an unrelated world. Changes to the option reload terrain automatically; after replacing fallback files, toggle the option off and on to refresh them.
 
 ## Cache storage
 
@@ -93,7 +102,7 @@ The project uses the included Gradle wrapper, MCP stable_39 mappings, and LiteLo
 
 ## Current limitations
 
-- Servers hosting multiple worlds behind one address can share a cache identity; user-selectable world profiles are not implemented.
+- Automatic proxy-world detection is not implemented; select a separate profile and reconnect for each world or reset.
 - Full upstream Bobby feature parity and broad modpack compatibility are not established. A dedicated-server check with a smaller server view distance remains outstanding.
 
 When reporting a rendering issue, include your mod versions, dimension, client/server view distances, and whether the affected terrain was previously explored.
