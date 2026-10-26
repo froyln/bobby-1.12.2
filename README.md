@@ -43,7 +43,7 @@ Install Bobby on the client. No server-side installation is needed.
 
 ## Controls and configuration
 
-Open LiteLoader’s mod list from the chest tab on the main menu or pause menu (or **Ctrl+Shift+Tab** if the tab is hidden). Select **Bobby 1.12.2 → Settings...** to change terrain caching, cached distance, the fallback world option, the singleplayer live distance, or the profile for your next connection. Click **Save & Close**, or press **Escape**, to save and apply your changes.
+Open LiteLoader’s mod list from the chest tab on the main menu or pause menu (or **Ctrl+Shift+Tab** if the tab is hidden). Select **Bobby 1.12.2 → Settings...** to change terrain caching, cached distance, the fallback world option, the singleplayer live distance, cached-terrain dimming, or the profile for your next connection. Click **Save & Close**, or press **Escape**, to save and apply your changes.
 
 Open **Options → Controls → Bobby 1.12.2** and assign a key to **Toggle Bobby terrain cache**. It starts unassigned to avoid key conflicts.
 
@@ -56,6 +56,7 @@ You can also edit `liteconfig/common/bobby112.json` in your instance’s Minecra
   "enabled": true,
   "cacheRenderDistance": 16,
   "integratedServerDistance": 0,
+  "tintCachedTerrain": false,
   "fallbackEnabled": false,
   "cacheProfile": ""
 }
@@ -66,6 +67,8 @@ You can also edit `liteconfig/common/bobby112.json` in your instance’s Minecra
 Changes are reloaded while Minecraft is running. Disabling Bobby restores Minecraft’s normal terrain distance.
 
 For a separate singleplayer live range, set **Singleplayer live distance** in Bobby’s settings, or `integratedServerDistance` in JSON. `0` (**Auto**) follows Minecraft; positive values are limited to 3–32 chunks. For example, keep Minecraft distance 8 and cached distance 16, then set the singleplayer live distance to 3. This changes the integrated server’s loading and tracking range for the host and LAN guests. Spawn chunks and other vanilla loading rules still apply. It takes effect on the next unpaused server tick; disabling Bobby restores Minecraft’s live distance. Dedicated servers keep their own distance.
+
+Set **Tint cached terrain** or `tintCachedTerrain` to `true` to make cached terrain visibly distinct: rendered sky light drops by 3–10 levels depending on gamma, and rendered block light rises by up to 5. It defaults to off and does not change saved light data or live terrain.
 
 ## Cache profiles
 
