@@ -18,7 +18,7 @@ Inspect and record the exact LiteOptimizer revision before designing integration
 
 Server data always supersedes cached terrain. Cached chunks are visual snapshots and may be stale: they must not simulate entities, tick blocks, or authorize interactions. Separate server/world and dimension identity, invalidate stale asynchronous work on disconnect or dimension changes, and prevent old cache results from replacing newly received server data.
 
-Cache writes must not modify existing saves. Define bounded memory use, loading work, disk retention, and recoverable handling of interrupted writes or corrupt data. Any fallback save reader must be read-only.
+Cache writes must not modify existing saves. Maintain bounded memory use, loading work, disk retention, and recoverable handling of interrupted writes or corrupt data. Recorded/fallback terrain share bounded validation and simulation-data stripping before native decoding. Any fallback save reader must be read-only.
 
 ## Decisions still required
 
