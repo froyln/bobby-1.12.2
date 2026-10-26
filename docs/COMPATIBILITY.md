@@ -152,3 +152,13 @@ Exact artifact `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c
 The same artifact passed the broader GPU regression: 288 columns/288 meshes in the Overworld and 288 columns/2194 meshes in the Nether. Across 859 and 876 movement frames respectively (10 Overworld and 11 Nether boundary crossings), missing cached section frames were zero. Memory, renderer reload and disk reload comparisons had zero missing/changed terrain, light, mesh-byte or GPU vertex results. Both dimensions passed live handoff, packet invalidation/rebuild, and the final disable/re-enable controls recovered disk data. The run completed with zero failures.
 
 JDK8 `./gradlew test build --offline` passes 54 tests with zero failures/errors/skips; setup and whitespace checks pass. This does not establish the complete release matrix, dedicated-server behavior or broad modpack compatibility. EULA acceptance and project licensing remain pending.
+
+
+## Current-artifact renderer matrix (2026-10-26)
+
+The preserved issue #25 artifact `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c` also passed the independent-distance fixture without LiteOptimizer and with LiteOptimizer 0.6.0-rc2 installed but `sodium: false`. The latter startup log explicitly confirmed `render/sodium: disabled`. Each run completed with zero failed assertions: live distance stayed 3, renderer distance was 10 with a 160-block camera distance, an explored target eight chunks away was cached and absent from the live provider, and vanilla compiled its terrain mesh. JSON reload reached 12; disabling restored 3/48 blocks; re-enabling restored 10. Combined with the Sodium-enabled checks above, this covers the three renderer configurations for this controlled distance scenario, rather than every scenario in the release matrix.
+
+A later JDK8 offline test/build passed again. Rebuilding changes LiteLoader's generated revision and archive timestamps; the rebuilt archive has a different checksum. Runtime evidence here applies to the preserved artifact identified above. Compiled entries in that artifact and the rebuild were identical; only `litemod.json` content changed from revision 60 to 61.
+
+
+The same artifact also passed an isolated integrated-world End-dimension run with Sodium enabled. After entering dimension 1 and exploring the target, it verified live distance 3, cache renderer distance 10, a nonempty cached GPU mesh eight chunks away with no live-provider target, config reload to 12 and disable/re-enable restoration. The run completed with zero failures. This covers entering and rendering in the End; End exit/credits and forced disconnect during pending I/O remain unchecked.
