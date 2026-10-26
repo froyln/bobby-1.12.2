@@ -18,9 +18,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +27,7 @@ public final class ChunkCache {
     private static final long FAILED_LOAD_RETRY_NANOS = java.util.concurrent.TimeUnit.SECONDS.toNanos(2);
     private static final long MAX_DISK_BYTES = 2L * 1024 * 1024 * 1024;
     private static final Long2ObjectLinkedOpenHashMap<Chunk> CHUNKS = new Long2ObjectLinkedOpenHashMap<>();
+    private static final CacheProfile PROFILE = new CacheProfile();
     private static World currentWorld;
     private static ChunkStorage storage;
     private static CacheRetention retention;
@@ -53,6 +51,14 @@ public final class ChunkCache {
         if (currentWorld != null) {
             storage = createStorage(currentWorld);
         }
+    }
+
+    public static synchronized String configureProfile(String value) {
+        return PROFILE.configure(value);
+    }
+
+    public static synchronized String activeProfile() {
+        return PROFILE.active();
     }
 
     public static synchronized void setEnabled(boolean value) {
@@ -118,6 +124,8 @@ public final class ChunkCache {
 
     public static synchronized void begin(World world) {
         if (currentWorld != world) {
+            if (world == null) PROFILE.disconnect();
+            else if (currentWorld == null) PROFILE.connect();
             CHUNKS.clear();
             pendingLoads.clear();
             failedLoads.clear();
@@ -378,7 +386,6 @@ public final class ChunkCache {
     }
 
     private static File cacheDirectory(World world) {
-        // shortcut: remote identity is address plus server-list name; add a selectable profile for proxy multiworld servers.
         Minecraft client = Minecraft.getMinecraft();
         String identity;
         if (client.isSingleplayer()) {
@@ -396,17 +403,9 @@ public final class ChunkCache {
         if (identity == null || identity.trim().isEmpty()) {
             return null;
         }
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(identity.getBytes(StandardCharsets.UTF_8));
-            StringBuilder key = new StringBuilder();
-            for (byte value : digest) {
-                key.append(String.format("%02x", value & 0xff));
-            }
-            return new File(new File(new File(new File(client.gameDir, ".bobby112"), "v1"), key.toString()),
-                    Integer.toString(world.provider.getDimensionType().getId()));
-        } catch (NoSuchAlgorithmException impossible) {
-            throw new AssertionError(impossible);
-        }
+        String key = CacheProfile.directoryKey(identity, PROFILE.active());
+        return new File(new File(new File(new File(client.gameDir, ".bobby112"), "v1"), key),
+                Integer.toString(world.provider.getDimensionType().getId()));
     }
 
     public static int chunkX(long pos) {

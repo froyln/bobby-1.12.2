@@ -20,6 +20,7 @@ import net.minecraft.util.math.MathHelper;
 import org.lwjgl.input.Keyboard;
 
 import dev.froyln.bobby112.cache.ChunkCache;
+import dev.froyln.bobby112.cache.CacheProfile;
 import dev.froyln.bobby112.cache.CacheRenderDistance;
 import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.entity.Entity;
@@ -37,6 +38,9 @@ public class LiteModBobby112 implements Tickable, Configurable {
 
     @Expose
     public boolean fallbackEnabled = false;
+
+    @Expose
+    public String cacheProfile = "";
 
     private File configFile;
     private long configModified;
@@ -62,6 +66,12 @@ public class LiteModBobby112 implements Tickable, Configurable {
         ChunkCache.initialize(LiteLoader.getGameDirectory());
         configFile = new File(LiteLoader.getCommonConfigFolder(), "bobby112.json");
         reloadConfig();
+        try {
+            setCacheProfile(cacheProfile);
+        } catch (IllegalArgumentException invalid) {
+            setCacheProfile("");
+            System.err.println("[Bobby 1.12.2] Invalid cache profile; using the default profile");
+        }
         toggleKey = new KeyBinding("Toggle Bobby terrain cache", Keyboard.KEY_NONE, "Bobby 1.12.2");
         LiteLoader.getInput().registerKeyBinding(toggleKey);
         System.out.println("[Bobby 1.12.2] " + VERSION + " loaded");
@@ -78,6 +88,7 @@ public class LiteModBobby112 implements Tickable, Configurable {
                     client.ingameGUI.setOverlayMessage("Bobby terrain cache: " + (enabled ? "enabled" : "disabled"), false);
                 }
             }
+            setCacheProfile(cacheProfile);
             CacheRenderDistance.configure(cacheRenderDistance);
             boolean fallbackChanged = ChunkCache.setFallbackEnabled(fallbackEnabled);
             boolean wasEnabled = ChunkCache.isEnabled();
@@ -94,6 +105,10 @@ public class LiteModBobby112 implements Tickable, Configurable {
         }
     }
 
+    public void setCacheProfile(String value) {
+        cacheProfile = ChunkCache.configureProfile(value);
+    }
+
     private void reloadConfig() {
         if (configFile == null || !configFile.isFile() || configFile.lastModified() <= configModified) {
             return;
@@ -102,9 +117,11 @@ public class LiteModBobby112 implements Tickable, Configurable {
         try (FileReader reader = new FileReader(configFile)) {
             LiteModBobby112 config = CONFIG_READER.fromJson(reader, LiteModBobby112.class);
             if (config != null) {
+                String profile = CacheProfile.normalize(config.cacheProfile);
                 enabled = config.enabled;
                 cacheRenderDistance = config.cacheRenderDistance;
                 fallbackEnabled = config.fallbackEnabled;
+                setCacheProfile(profile);
             }
         } catch (Exception e) {
             System.err.println("[Bobby 1.12.2] Could not reload config: " + e.getMessage());
