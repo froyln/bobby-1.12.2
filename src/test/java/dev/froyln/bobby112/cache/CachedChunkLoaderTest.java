@@ -96,7 +96,7 @@ public class CachedChunkLoaderTest {
             loader.writeVerified(new net.minecraft.util.math.ChunkPos(0, 0), root);
             fail("oversized verification readback was admitted");
         } catch (java.io.IOException expected) {
-            assertNotNull(expected.getCause());
+            assertTrue(expected.getMessage().contains("Terrain NBT"));
         }
     }
 
@@ -127,6 +127,23 @@ public class CachedChunkLoaderTest {
         };
         assertNull(loader.decode(null, 0, 0, root));
         assertTrue(fixed.get());
+    }
+
+    @Test
+    public void rejectsOverflowingArrayLengthsBeforeNativeAllocation() throws Exception {
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        try (java.io.DataOutputStream out = new java.io.DataOutputStream(bytes)) {
+            out.writeByte(10); out.writeUTF(""); out.writeByte(7); out.writeUTF("bad");
+            out.writeInt(Integer.MAX_VALUE); out.writeByte(0);
+        }
+        try {
+            TerrainNbt.read(new java.io.DataInputStream(new java.io.ByteArrayInputStream(bytes.toByteArray())));
+            fail("overflowing array length was admitted");
+        } catch (java.io.IOException expected) {
+            assertNotNull(expected.getMessage());
+        } catch (OutOfMemoryError unsafeAllocation) {
+            fail("native parser attempted allocation for an overflowing array length");
+        }
     }
 
 }

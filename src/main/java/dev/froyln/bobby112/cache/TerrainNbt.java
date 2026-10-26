@@ -1,6 +1,8 @@
 package dev.froyln.bobby112.cache;
 
-import java.io.DataInput;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -10,12 +12,69 @@ import net.minecraft.nbt.NBTSizeTracker;
 final class TerrainNbt {
     private TerrainNbt() {}
 
-    static NBTTagCompound read(DataInput input) throws IOException {
+    private static final int MAX_BYTES = 16 * 1024 * 1024;
+
+    static NBTTagCompound read(DataInputStream input) throws IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int count;
+        while ((count = input.read(buffer)) != -1) {
+            if (bytes.size() + count > MAX_BYTES) throw new IOException("Terrain NBT exceeds the decoded byte limit");
+            bytes.write(buffer, 0, count);
+        }
+        byte[] encoded = bytes.toByteArray();
+        DataInputStream check = new DataInputStream(new ByteArrayInputStream(encoded));
+        if (check.readUnsignedByte() != 10) throw new IOException("Terrain NBT root must be a compound");
+        skipString(check);
+        checkPayload(check, 10, 0);
         try {
-            return CompressedStreamTools.read(input, new NBTSizeTracker(16L * 1024 * 1024));
+            return CompressedStreamTools.read(new DataInputStream(new ByteArrayInputStream(encoded)), new NBTSizeTracker(MAX_BYTES));
         } catch (RuntimeException invalid) {
             throw new IOException("Invalid or oversized terrain NBT", invalid);
         }
+    }
+
+    private static void checkPayload(DataInputStream input, int type, int depth) throws IOException {
+        if (depth > 512) throw new IOException("Terrain NBT nesting is too deep");
+        switch (type) {
+            case 1: skip(input, 1); break;
+            case 2: skip(input, 2); break;
+            case 3: case 5: skip(input, 4); break;
+            case 4: case 6: skip(input, 8); break;
+            case 7: skipArray(input, 1); break;
+            case 8: skipString(input); break;
+            case 9:
+                int element = input.readUnsignedByte();
+                int count = input.readInt();
+                if (element > 12 || count < 0 || count > input.available() || count > MAX_BYTES / 4
+                        || (element == 0 && count != 0)) throw new IOException("Invalid terrain NBT list");
+                for (int i = 0; i < count; i++) checkPayload(input, element, depth + 1);
+                break;
+            case 10:
+                int child;
+                while ((child = input.readUnsignedByte()) != 0) {
+                    skipString(input);
+                    checkPayload(input, child, depth + 1);
+                }
+                break;
+            case 11: skipArray(input, 4); break;
+            case 12: skipArray(input, 8); break;
+            default: throw new IOException("Unknown terrain NBT type");
+        }
+    }
+
+    private static void skipArray(DataInputStream input, int width) throws IOException {
+        int count = input.readInt();
+        if (count < 0 || count > input.available() / width) throw new IOException("Invalid terrain NBT array length");
+        skip(input, count * width);
+    }
+
+    private static void skipString(DataInputStream input) throws IOException {
+        skip(input, input.readUnsignedShort());
+    }
+
+    private static void skip(DataInputStream input, int bytes) throws IOException {
+        if (bytes > input.available() || input.skipBytes(bytes) != bytes) throw new IOException("Truncated terrain NBT");
     }
 
     static boolean validSkyLight(NBTTagCompound root) {
