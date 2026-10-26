@@ -181,3 +181,8 @@ The same artifact passed native panel open/change/save/reopen, Auto/32 bounds, d
 
 
 A repeat without LiteOptimizer also completed with zero failures on this exact artifact: all three world player-chunk maps and PlayerList used 3 while client distance stayed 8, cached target terrain compiled in vanilla beyond the live range, and override reload, disabling, re-enabling and Auto restored the expected distances. The isolated profile was restored to Sodium enabled and automatic live distance afterward.
+
+
+## End credits and return (2026-10-26)
+
+Artifact `a9d7985d940406724b4bd1f199c6238f0b8d959f77f4cd77dd8ef805441dd1e6` passed a fresh integrated-world End entry/render/exit fixture with Sodium enabled and zero failures. An explored cached target eight chunks away rendered while absent from the live provider. The server's native End exit opened the actual credits screen; the End world remained active during credits. Invoking its normal Escape handler sent the native respawn request, returning to a different Overworld client world. Old End cache positions were empty and renderer distance remained 10. No fatal log entries occurred. This checks one normal credits/respawn sequence, rather than repeated portal travel, LAN guests or remote-server reconnects.
