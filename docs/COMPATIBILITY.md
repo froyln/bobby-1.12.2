@@ -162,3 +162,10 @@ A later JDK8 offline test/build passed again. Rebuilding changes LiteLoader's ge
 
 
 The same artifact also passed an isolated integrated-world End-dimension run with Sodium enabled. After entering dimension 1 and exploring the target, it verified live distance 3, cache renderer distance 10, a nonempty cached GPU mesh eight chunks away with no live-provider target, config reload to 12 and disable/re-enable restoration. The run completed with zero failures. This covers entering and rendering in the End; End exit/credits and forced disconnect during pending I/O remain unchecked.
+
+
+## Forced disconnect with queued writer work (2026-10-26)
+
+The preserved `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c` artifact passed a packaged MultiMC/Sodium integrated-server disconnect fixture with zero failed assertions and no fatal log entries. It queued 100 tasks through the actual cache writer queue, verified that the writer was active with unfinished tasks, and invoked the server player's native disconnect method. The first task deliberately waited 1.5 seconds. All 100 tasks completed; the client world, cache world and storage cleared; old-world cache positions stayed empty after a further five-second wait.
+
+This checks lifecycle cleanup and draining of admitted writer tasks, rather than simulating remote transport failure, physical disk latency or forced process termination. The existing persistence fixtures cover terrain serialization separately. End exit/credits, dedicated-server protocol coverage and measured travel performance remain release checks.
