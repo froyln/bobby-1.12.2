@@ -152,3 +152,32 @@ Exact artifact `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c
 The same artifact passed the broader GPU regression: 288 columns/288 meshes in the Overworld and 288 columns/2194 meshes in the Nether. Across 859 and 876 movement frames respectively (10 Overworld and 11 Nether boundary crossings), missing cached section frames were zero. Memory, renderer reload and disk reload comparisons had zero missing/changed terrain, light, mesh-byte or GPU vertex results. Both dimensions passed live handoff, packet invalidation/rebuild, and the final disable/re-enable controls recovered disk data. The run completed with zero failures.
 
 JDK8 `./gradlew test build --offline` passes 54 tests with zero failures/errors/skips; setup and whitespace checks pass. This does not establish the complete release matrix, dedicated-server behavior or broad modpack compatibility. EULA acceptance and project licensing remain pending.
+
+
+## Current-artifact renderer matrix (2026-10-26)
+
+The preserved issue #25 artifact `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c` also passed the independent-distance fixture without LiteOptimizer and with LiteOptimizer 0.6.0-rc2 installed but `sodium: false`. The latter startup log explicitly confirmed `render/sodium: disabled`. Each run completed with zero failed assertions: live distance stayed 3, renderer distance was 10 with a 160-block camera distance, an explored target eight chunks away was cached and absent from the live provider, and vanilla compiled its terrain mesh. JSON reload reached 12; disabling restored 3/48 blocks; re-enabling restored 10. Combined with the Sodium-enabled checks above, this covers the three renderer configurations for this controlled distance scenario, rather than every scenario in the release matrix.
+
+A later JDK8 offline test/build passed again. Rebuilding changes LiteLoader's generated revision and archive timestamps; the rebuilt archive has a different checksum. Runtime evidence here applies to the preserved artifact identified above. Compiled entries in that artifact and the rebuild were identical; only `litemod.json` content changed from revision 60 to 61.
+
+
+The same artifact also passed an isolated integrated-world End-dimension run with Sodium enabled. After entering dimension 1 and exploring the target, it verified live distance 3, cache renderer distance 10, a nonempty cached GPU mesh eight chunks away with no live-provider target, config reload to 12 and disable/re-enable restoration. The run completed with zero failures. This covers entering and rendering in the End; End exit/credits and forced disconnect during pending I/O remain unchecked.
+
+
+## Forced disconnect with queued writer work (2026-10-26)
+
+The preserved `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c` artifact passed a packaged MultiMC/Sodium integrated-server disconnect fixture with zero failed assertions and no fatal log entries. It queued 100 tasks through the actual cache writer queue, verified that the writer was active with unfinished tasks, and invoked the server player's native disconnect method. The first task deliberately waited 1.5 seconds. All 100 tasks completed; the client world, cache world and storage cleared; old-world cache positions stayed empty after a further five-second wait.
+
+This checks lifecycle cleanup and draining of admitted writer tasks, rather than simulating remote transport failure, physical disk latency or forced process termination. The existing persistence fixtures cover terrain serialization separately. End exit/credits, dedicated-server protocol coverage and measured travel performance remain release checks.
+
+
+## Opt-in integrated-server live distance (2026-10-26)
+
+The native settings panel and JSON now expose `integratedServerDistance`. Its default 0 preserves Minecraft's live distance. Positive values clamp to vanilla's server range of 3–32. While Bobby is enabled, only `IntegratedServer.tick` reads the override; disabling returns to the current client setting. Changes apply on an unpaused server tick. This changes singleplayer/LAN loading and tracking, including guests, and does not replace vanilla spawn-chunk rules. Dedicated-server classes and GameSettings are unchanged.
+
+Artifact `a9d7985d940406724b4bd1f199c6238f0b8d959f77f4cd77dd8ef805441dd1e6` passed the packaged Sodium fixture: client distance remained 8, server PlayerList and all three world player-chunk maps used radius 3, and an explored target eight chunks away had a cached GPU mesh while absent from the live provider. JSON reload changed server distance to 5 and cached distance to 12. Disabling restored live distance 8, re-enabling restored 3, and Auto restored 8. The fixture completed with zero failures. Two initial fixture-only inherited-member remapping errors were corrected without production changes.
+
+The same artifact passed native panel open/change/save/reopen, Auto/32 bounds, draft preservation on resize, Escape save and JSON reload with zero failures. Its actual panel screenshot was inspected. JDK8 test/build passes 57 tests with zero failures/errors/skips. These checks do not establish LAN guest behavior or dedicated-server protocol compatibility.
+
+
+A repeat without LiteOptimizer also completed with zero failures on this exact artifact: all three world player-chunk maps and PlayerList used 3 while client distance stayed 8, cached target terrain compiled in vanilla beyond the live range, and override reload, disabling, re-enabling and Auto restored the expected distances. The isolated profile was restored to Sodium enabled and automatic live distance afterward.
