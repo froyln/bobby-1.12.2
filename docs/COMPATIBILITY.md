@@ -169,3 +169,15 @@ The same artifact also passed an isolated integrated-world End-dimension run wit
 The preserved `e5ac00a95cd718caf935b550f8155fa5ea6f393f72753f6aad500bb2fa4cd36c` artifact passed a packaged MultiMC/Sodium integrated-server disconnect fixture with zero failed assertions and no fatal log entries. It queued 100 tasks through the actual cache writer queue, verified that the writer was active with unfinished tasks, and invoked the server player's native disconnect method. The first task deliberately waited 1.5 seconds. All 100 tasks completed; the client world, cache world and storage cleared; old-world cache positions stayed empty after a further five-second wait.
 
 This checks lifecycle cleanup and draining of admitted writer tasks, rather than simulating remote transport failure, physical disk latency or forced process termination. The existing persistence fixtures cover terrain serialization separately. End exit/credits, dedicated-server protocol coverage and measured travel performance remain release checks.
+
+
+## Opt-in integrated-server live distance (2026-10-26)
+
+The native settings panel and JSON now expose `integratedServerDistance`. Its default 0 preserves Minecraft's live distance. Positive values clamp to vanilla's server range of 3–32. While Bobby is enabled, only `IntegratedServer.tick` reads the override; disabling returns to the current client setting. Changes apply on an unpaused server tick. This changes singleplayer/LAN loading and tracking, including guests, and does not replace vanilla spawn-chunk rules. Dedicated-server classes and GameSettings are unchanged.
+
+Artifact `a9d7985d940406724b4bd1f199c6238f0b8d959f77f4cd77dd8ef805441dd1e6` passed the packaged Sodium fixture: client distance remained 8, server PlayerList and all three world player-chunk maps used radius 3, and an explored target eight chunks away had a cached GPU mesh while absent from the live provider. JSON reload changed server distance to 5 and cached distance to 12. Disabling restored live distance 8, re-enabling restored 3, and Auto restored 8. The fixture completed with zero failures. Two initial fixture-only inherited-member remapping errors were corrected without production changes.
+
+The same artifact passed native panel open/change/save/reopen, Auto/32 bounds, draft preservation on resize, Escape save and JSON reload with zero failures. Its actual panel screenshot was inspected. JDK8 test/build passes 57 tests with zero failures/errors/skips. These checks do not establish LAN guest behavior or dedicated-server protocol compatibility.
+
+
+A repeat without LiteOptimizer also completed with zero failures on this exact artifact: all three world player-chunk maps and PlayerList used 3 while client distance stayed 8, cached target terrain compiled in vanilla beyond the live range, and override reload, disabling, re-enabling and Auto restored the expected distances. The isolated profile was restored to Sodium enabled and automatic live distance afterward.

@@ -10,6 +10,7 @@
     "ChunkProviderClientMixin",
     "ChunkProviderClientAccessor",
     "MinecraftMixin",
+    "IntegratedServerMixin",
     "RenderChunkMixin",
     "ChunkRenderWorkerMixin",
     "WorldMixin",

@@ -17,7 +17,7 @@ This is a Minecraft 1.12.2 LiteLoader implementation inspired by Bobby. It does 
 | Block entities and entities | Excluded from snapshots/fallback decoding; no cached simulation or interactions |
 | Cached terrain tint | Not included |
 | Unload delay | No configurable delay; terrain is captured when live chunks unload |
-| Integrated-server distance override | No separate override; Minecraft's setting controls live loading while Bobby extends visual distance |
+| Integrated-server distance override | Opt-in `integratedServerDistance`: 0 follows Minecraft; 3–32 overrides singleplayer/LAN loading and tracking while Bobby is enabled |
 | World selection/merge/upgrade commands | Manual profile selection through settings/JSON; merge and upgrade commands are not included |
 | Modern world/cache import | Not supported; no conversion or mutation of source saves |
 

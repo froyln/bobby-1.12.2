@@ -22,6 +22,7 @@ import org.lwjgl.input.Keyboard;
 import dev.froyln.bobby112.cache.ChunkCache;
 import dev.froyln.bobby112.cache.CacheProfile;
 import dev.froyln.bobby112.cache.CacheRenderDistance;
+import dev.froyln.bobby112.cache.IntegratedServerDistance;
 import dev.froyln.bobby112.cache.RenderChunkLookup;
 import net.minecraft.entity.Entity;
 
@@ -41,6 +42,9 @@ public class LiteModBobby112 implements Tickable, Configurable {
 
     @Expose
     public String cacheProfile = "";
+
+    @Expose
+    public int integratedServerDistance = 0;
 
     private File configFile;
     private long configModified;
@@ -90,6 +94,7 @@ public class LiteModBobby112 implements Tickable, Configurable {
             }
             setCacheProfile(cacheProfile);
             CacheRenderDistance.configure(cacheRenderDistance);
+            IntegratedServerDistance.configure(integratedServerDistance);
             boolean fallbackChanged = ChunkCache.setFallbackEnabled(fallbackEnabled);
             boolean wasEnabled = ChunkCache.isEnabled();
             ChunkCache.setEnabled(enabled);
@@ -121,6 +126,7 @@ public class LiteModBobby112 implements Tickable, Configurable {
                 enabled = config.enabled;
                 cacheRenderDistance = config.cacheRenderDistance;
                 fallbackEnabled = config.fallbackEnabled;
+                integratedServerDistance = config.integratedServerDistance;
                 setCacheProfile(profile);
             }
         } catch (Exception e) {
