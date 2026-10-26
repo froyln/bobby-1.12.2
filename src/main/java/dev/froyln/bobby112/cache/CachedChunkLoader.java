@@ -14,6 +14,7 @@ import net.minecraft.world.chunk.storage.RegionFile;
 import net.minecraft.world.chunk.storage.RegionFileCache;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.datafix.DataFixer;
+import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.storage.AnvilChunkLoader;
@@ -21,12 +22,14 @@ import net.minecraft.world.chunk.storage.AnvilChunkLoader;
 class CachedChunkLoader extends AnvilChunkLoader {
     private static final Field REGION_FILES = regionFilesField();
     private final File directory;
+    private final DataFixer fixer;
     private boolean written;
     private IOException failure;
 
     CachedChunkLoader(File directory, DataFixer fixer) {
         super(directory, fixer);
         this.directory = directory;
+        this.fixer = fixer;
     }
 
     void saveSnapshot(World world, Chunk chunk) throws IOException, MinecraftException {
@@ -59,7 +62,7 @@ class CachedChunkLoader extends AnvilChunkLoader {
                     CompressedStreamTools.write(root, out);
                 }
                 try (DataInputStream in = RegionFileCache.getChunkInputStream(directory, pos.x, pos.z)) {
-                    if (in == null || !root.equals(CompressedStreamTools.read(in))) {
+                    if (in == null || !root.equals(TerrainNbt.read(in))) {
                         throw new IOException("Region readback differs from the terrain snapshot");
                     }
                 }
@@ -94,27 +97,28 @@ class CachedChunkLoader extends AnvilChunkLoader {
     }
 
     @Override
+    public Chunk loadChunk(World world, int x, int z) throws IOException {
+        try (DataInputStream input = RegionFileCache.getChunkInputStream(directory, x, z)) {
+            return input == null ? null : decode(world, x, z, TerrainNbt.read(input));
+        }
+    }
+
+    Chunk decode(World world, int x, int z, NBTTagCompound root) {
+        if (!TerrainNbt.sanitize(root, x, z)) {
+            System.err.println("[Bobby 1.12.2] Ignoring invalid cached terrain: " + x + "," + z);
+            return null;
+        }
+        return checkedReadChunkFromNBT(world, x, z, fixer.process(FixTypes.CHUNK, root));
+    }
+
+    @Override
     protected Chunk checkedReadChunkFromNBT(World world, int x, int z, NBTTagCompound root) {
-        if (!validHeightMap(root.getCompoundTag("Level"))) {
-            System.err.println("[Bobby 1.12.2] Ignoring cached chunk with invalid height map: " + x + "," + z);
+        if (!TerrainNbt.sanitize(root, x, z)
+                || (world.provider.hasSkyLight() && !TerrainNbt.validSkyLight(root))) {
+            System.err.println("[Bobby 1.12.2] Ignoring invalid cached terrain: " + x + "," + z);
             return null;
         }
         return super.checkedReadChunkFromNBT(world, x, z, root);
     }
 
-    static boolean validHeightMap(NBTTagCompound level) {
-        if (!level.hasKey("HeightMap", 11)) {
-            return false;
-        }
-        int[] heights = level.getIntArray("HeightMap");
-        if (heights.length != 256) {
-            return false;
-        }
-        for (int height : heights) {
-            if (height < 0 || height > 256) {
-                return false;
-            }
-        }
-        return true;
-    }
 }

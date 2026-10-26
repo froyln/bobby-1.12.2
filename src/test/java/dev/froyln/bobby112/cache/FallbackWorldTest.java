@@ -83,11 +83,11 @@ public class FallbackWorldTest {
         NBTTagCompound root = terrain(0, 0);
         NBTTagList sections = root.getCompoundTag("Level").getTagList("Sections", 10);
         sections.getCompoundTagAt(0).setByteArray("Data", new byte[1]);
-        assertFalse(FallbackWorld.sanitize(root, 0, 0));
+        assertFalse(TerrainNbt.sanitize(root, 0, 0));
         root = terrain(0, 0);
         sections = root.getCompoundTag("Level").getTagList("Sections", 10);
         sections.appendTag(sections.getCompoundTagAt(0).copy());
-        assertFalse(FallbackWorld.sanitize(root, 0, 0));
+        assertFalse(TerrainNbt.sanitize(root, 0, 0));
     }
 
     static NBTTagCompound terrain(int x, int z) {
