@@ -104,7 +104,7 @@ cd bobby-1.12.2
 
 Output: `build/libs/bobby112-liteloader-1.12.2-0.1.0.litemod`.
 
-The project uses the included Gradle wrapper, MCP stable_39 mappings, and LiteLoader. See [compatibility](docs/COMPATIBILITY.md) for inspected versions and runtime checks.
+The project uses the included Gradle wrapper, MCP stable_39 mappings, LiteLoader, and Python 3 to normalize the final archive. The `.litemod` revision is pinned in `gradle.properties` and should be increased for a new release. See [compatibility](docs/COMPATIBILITY.md) for inspected versions and runtime checks.
 
 ## Current limitations
 

@@ -52,6 +52,7 @@ litemod {
         displayName = project.mod_name
         mcversion = project.minecraft_version
         version = project.mod_version
+        revision = project.mod_revision
         author = project.author
         mixinConfigs = ['mixins.' + project.mod_id + '.json']
     }
@@ -60,9 +61,22 @@ litemod {
 jar {
     classifier = ''
     baseName = archivesBaseName
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
     from litemod.outputs
 }
 
 mixin {
     defaultObfuscationEnv notch
 }
+
+task normalizeLitemod {
+    dependsOn reobfJar
+    doLast {
+        project.exec {
+            commandLine 'python3', 'scripts/normalize-litemod.py', project.tasks.jar.archivePath.absolutePath
+        }
+    }
+}
+
+build.dependsOn normalizeLitemod
