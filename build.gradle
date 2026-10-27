@@ -63,6 +63,7 @@ jar {
     baseName = archivesBaseName
     preserveFileTimestamps = false
     reproducibleFileOrder = true
+    from 'LICENSE'
     from litemod.outputs
 }
 

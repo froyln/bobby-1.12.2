@@ -7,6 +7,7 @@
 ![Minecraft 1.12.2](https://img.shields.io/badge/Minecraft-1.12.2-62B47A)
 ![LiteLoader](https://img.shields.io/badge/Loader-LiteLoader-4C93D6)
 ![Java 8](https://img.shields.io/badge/Java-8-E68A2E)
+[![GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](LICENSE)
 
 **[Documentation](docs/README.md) · [Compatibility](docs/COMPATIBILITY.md) · [Report an issue](https://github.com/froyln/bobby-1.12.2/issues)**
 
@@ -106,10 +107,14 @@ Output: `build/libs/bobby112-liteloader-1.12.2-0.1.0.litemod`.
 
 The project uses the included Gradle wrapper, MCP stable_39 mappings, LiteLoader, and Python 3 to normalize the final archive. The `.litemod` revision is pinned in `gradle.properties` and should be increased for a new release. See [compatibility](docs/COMPATIBILITY.md) for inspected versions and runtime checks.
 
+## License
+
+This project is licensed under the [GNU General Public License version 3](LICENSE) (`GPL-3.0-only`).
+
 ## Current limitations
 
 - Automatic proxy-world detection is not implemented; select a separate profile and reconnect for each world or reset.
-- Full upstream Bobby feature parity and broad modpack compatibility are not established. A dedicated-server check with a smaller server view distance remains outstanding.
+- Full upstream Bobby feature parity and broad modpack compatibility are not established. A local dedicated-server test at server distance 4 and client distance 12 passed; other server versions, plugins and proxy setups remain unverified.
 
 When reporting a rendering issue, include your mod versions, dimension, client/server view distances, and whether the affected terrain was previously explored.
 
