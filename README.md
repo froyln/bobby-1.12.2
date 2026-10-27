@@ -28,6 +28,7 @@ Explore an area first, then move away. Set Bobby’s cached distance above Minec
 - **Separate world and dimension caches** — store snapshots outside your world saves.
 - **Read-only fallback world** — optionally display terrain from a matching Minecraft 1.12.2 world copy.
 - **Independent terrain distance** — display explored chunks beyond the live distance in singleplayer or multiplayer.
+- **LiteOptimizer compatibility** — tested with Sodium’s terrain renderer enabled; see the compatibility record for the exact build.
 - **In-game settings** — configure caching, distance, fallback and profiles through LiteLoader; an optional key toggles caching.
 - **Background disk loading and saving** — keep file work off the client thread.
 
@@ -36,8 +37,8 @@ Explore an area first, then move away. Set Bobby’s cached distance above Minec
 Requires **Minecraft 1.12.2**, **LiteLoader**, and **Java 8**.
 
 1. Set up a Minecraft 1.12.2 instance with LiteLoader.
-2. Build the mod using the instructions below.
-3. Copy `bobby112-liteloader-1.12.2-0.1.0.litemod` from `build/libs/` into your instance’s `minecraft/mods/1.12.2/` folder.
+2. Download [`bobby112-gplv3-1.12.2.litemod` from the v0.1.0 release](https://github.com/froyln/bobby-1.12.2/releases/download/v0.1.0/bobby112-gplv3-1.12.2.litemod).
+3. Copy it into your instance’s `minecraft/mods/1.12.2/` folder.
 4. Launch Minecraft and explore to populate the cache.
 
 Install Bobby on the client. No server-side installation is needed.
@@ -114,7 +115,9 @@ This project is licensed under the [GNU General Public License version 3](LICENS
 ## Current limitations
 
 - Automatic proxy-world detection is not implemented; select a separate profile and reconnect for each world or reset.
-- Full upstream Bobby feature parity and broad modpack compatibility are not established. A local dedicated-server test at server distance 4 and client distance 12 passed; other server versions, plugins and proxy setups remain unverified.
+- Cached entities and block entities are not rendered or simulated; cache merge/upgrade commands and modern world imports are not included.
+- A dense distance-32 test retained 1,072 columns, but a fully populated maximum window and general gameplay performance at that distance remain unverified.
+- Full upstream Bobby feature parity and broad modpack compatibility are not established. The tested LiteOptimizer build and local dedicated-server cases are listed in [Compatibility](docs/COMPATIBILITY.md); other server versions, plugins and proxy setups remain unverified.
 
 When reporting a rendering issue, include your mod versions, dimension, client/server view distances, and whether the affected terrain was previously explored.
 
