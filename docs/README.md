@@ -1,6 +1,6 @@
 # Bobby 1.12.2 documentation
 
-The project has an early LiteLoader build with bounded asynchronous Anvil persistence and rendering-only terrain hooks. Cached terrain holes in the previous build were reproduced with a 288-column regression, and the section-creation, residency and neighbor logic has been corrected. See [compatibility](COMPATIBILITY.md) for current runtime results. Independent terrain distance and opt-in read-only fallback worlds are implemented. A native LiteLoader settings panel edits the current options, including manual cache profiles for proxy/reset worlds. Complete upstream feature parity and broader compatibility remain unfinished.
+The current GNU GPLv3 LiteLoader package provides persistent client-side terrain snapshots, independent render distance, optional read-only fallback terrain, a native settings panel and manual cache profiles. The exact release artifact has passed isolated MultiMC checks for persistent reconnect on a local dedicated server, distance 32 with LiteOptimizer/Sodium enabled, and a denser 1,072-column cached view. See [compatibility](COMPATIBILITY.md) for tested revisions and limits. This implementation does not provide full upstream Bobby parity or broad modpack compatibility.
 
 - [Feature coverage and limits](FEATURES.md)
 - [Project requirements and compatibility constraints](PROJECT.md)
