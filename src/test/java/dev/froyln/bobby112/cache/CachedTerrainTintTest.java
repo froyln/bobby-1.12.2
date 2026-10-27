@@ -1,5 +1,6 @@
 package dev.froyln.bobby112.cache;
 
+import com.google.gson.GsonBuilder;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -20,7 +21,7 @@ public class CachedTerrainTintTest {
     }
 
     @Test public void oldConfigurationLeavesTintDisabled() {
-        dev.froyln.bobby112.LiteModBobby112 mod = new com.google.gson.Gson().fromJson(
+        dev.froyln.bobby112.LiteModBobby112 mod = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(
                 "{\"enabled\":true}", dev.froyln.bobby112.LiteModBobby112.class);
         assertFalse(mod.tintCachedTerrain);
     }

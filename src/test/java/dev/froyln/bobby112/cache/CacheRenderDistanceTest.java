@@ -1,5 +1,6 @@
 package dev.froyln.bobby112.cache;
 
+import com.google.gson.GsonBuilder;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -10,7 +11,7 @@ public class CacheRenderDistanceTest {
         assertEquals(2, CacheRenderDistance.effective(2, 16, false));
     }
     @Test public void oldConfigurationKeepsDefaultCachedDistance() {
-        dev.froyln.bobby112.LiteModBobby112 config = new com.google.gson.Gson().fromJson(
+        dev.froyln.bobby112.LiteModBobby112 config = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(
                 "{\"enabled\":true}", dev.froyln.bobby112.LiteModBobby112.class);
         assertEquals(16, config.cacheRenderDistance);
         assertEquals("", config.cacheProfile);
