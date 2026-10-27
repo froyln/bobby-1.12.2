@@ -2,11 +2,11 @@
 
 ## Goal and status
 
-Create a client mod for Minecraft 1.12.2 and LiteLoader implementing Bobby-style functionality, compatible with LiteOptimizer. The prototype has bounded in-memory snapshots, asynchronous Anvil-region persistence, and renderer hooks. The current package starts in MultiMC with LiteOptimizer's Sodium renderer enabled and visually renders cached terrain with both Sodium enabled and disabled. Its local harness confirmed disk recovery, residency bounded by the current view window, live-chunk priority, and mesh continuity during movement. Independent cached terrain distance is implemented for singleplayer and multiplayer rendering; controlled integrated-world checks use a smaller live distance. A genuine independently limited remote-server test, broad compatibility, and release behavior remain outstanding. The working name is Bobby 1.12.2 and does not imply upstream affiliation.
+Create a client mod for Minecraft 1.12.2 and LiteLoader implementing Bobby-style functionality, compatible with LiteOptimizer. The current package has bounded in-memory snapshots, asynchronous Anvil-region persistence, and renderer hooks. It starts in MultiMC with LiteOptimizer's Sodium renderer enabled and renders cached terrain with Sodium enabled, disabled and absent. Packaged checks cover disk recovery, live-chunk priority, movement handoffs, and a local dedicated server whose view distance was smaller than the client distance; an explored chunk rendered from cache after reconnect. Independent cached terrain distance works in singleplayer and multiplayer rendering. Broad modpack compatibility and final release review remain outstanding. The working name is Bobby 1.12.2 and does not imply upstream affiliation.
 
 ## Reference behavior
 
-[Bobby’s description](https://www.curseforge.com/minecraft/mc-mods/bobby) describes storing chunks received from a server and displaying them beyond the server’s view distance, optional terrain from a local `bobby-fallback` world, automatic configuration reload, and an optional configuration screen. Packaged persistence and local travel have runtime evidence. The independent cached distance keeps the live setting unchanged; a dedicated smaller-view-distance remote-server test remains outstanding. The LiteLoader JSON `enabled` setting has an in-game Controls binding, saved state and runtime disable/re-enable checks. The native LiteLoader settings panel edits caching, distance and fallback with saved state. Its Fabric integration and ModMenu/ClothConfig UI cannot be assumed to transfer to LiteLoader.
+[Bobby’s description](https://www.curseforge.com/minecraft/mc-mods/bobby) describes storing chunks received from a server and displaying them beyond the server’s view distance, optional terrain from a local `bobby-fallback` world, automatic configuration reload, and an optional configuration screen. A packaged local dedicated-server test confirms rendering beyond both a server view distance of four and a client live distance of 12, followed by disk recovery on reconnect. Remote network conditions and wider server compatibility remain unchecked. The LiteLoader JSON `enabled` setting has an in-game Controls binding, saved state and runtime disable/re-enable checks. The native LiteLoader settings panel edits caching, distance and fallback with saved state. Its Fabric integration and ModMenu/ClothConfig UI cannot be assumed to transfer to LiteLoader.
 
 [Feature coverage](FEATURES.md) tracks persistent chunk caching, distant rendering, session reload, fallback worlds, configuration reload, UI and additional upstream settings explicitly. The opt-in fallback reads only 1.12.2 Anvil terrain and strips simulation data; A native LiteLoader panel, JSON reload and the Controls toggle provide configuration. Full upstream parity remains unimplemented. The prototype stores terrain in versioned Anvil region files under `.bobby112/v1/` with a fixed 2 GiB retention budget. Named cache profiles are selectable through settings/JSON and apply on the next connection; existing modern Bobby cache compatibility is not implemented.
 
@@ -20,13 +20,16 @@ Server data always supersedes cached terrain. Cached chunks are visual snapshots
 
 Cache writes must not modify existing saves. Maintain bounded memory use, loading work, disk retention, and recoverable handling of interrupted writes or corrupt data. Recorded/fallback terrain share bounded validation and simulation-data stripping before native decoding. Any fallback save reader must be read-only.
 
+## License
+
+The project is licensed under [GNU GPL version 3](../LICENSE) (`GPL-3.0-only`). No upstream implementation code has been copied; review attribution and license terms before any future reuse.
+
 ## Decisions still required
 
-- Project license and attribution requirements before reusing upstream code.
 - Supported LiteOptimizer version range beyond the specific inspected/runtime builds.
 - Automatic world matching behavior; explicit named profiles now provide manual isolation for proxy/reset worlds.
 - The remaining upstream settings and feature gaps listed in [feature coverage](FEATURES.md).
-- Dedicated-server and broader release validation. Java8/MCP stable_39/LiteLoader packaging, cache storage ownership, bounded asynchronous persistence, independent distance and read-only fallback terrain already have implementation and focused evidence.
+- Broader release validation and compatibility beyond the specific inspected versions. Java8/MCP stable_39/LiteLoader packaging, cache storage ownership, bounded asynchronous persistence, independent distance, read-only fallback terrain and one local dedicated-server test already have implementation and focused evidence.
 
 ## Evidence required before release
 
